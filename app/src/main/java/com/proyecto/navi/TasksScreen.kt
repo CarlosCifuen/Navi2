@@ -98,8 +98,7 @@ private fun sampleTasks(): List<Task> = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(
-    onAddTaskClick: () -> Unit = {},
-    onNavigate: (NaviRoute) -> Unit = {}
+    onAddTaskClick: () -> Unit = {}
 ) {
     val allTasks = remember { sampleTasks() }
     var filter by remember { mutableStateOf(TaskFilter.TODAS) }
@@ -138,7 +137,7 @@ fun TasksScreen(
                 )
             )
         },
-        bottomBar = { NaviBottomBar(selected = NaviRoute.TAREAS, onSelect = onNavigate) },
+        // Sin bottomBar: la barra la provee NaviApp para las 3 pantallas top-level.
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTaskClick,

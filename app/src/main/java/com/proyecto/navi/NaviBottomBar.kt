@@ -7,48 +7,56 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
 
 /**
- * Rutas de las 3 pantallas principales de la app (aún no usamos Navigation Compose,
- * así que por ahora esto solo controla qué ítem se ve seleccionado).
+ * Describe un ítem de la barra inferior. Tener esto como dato (y no como
+ * tres bloques de NavigationBarItem escritos a mano) significa que agregar
+ * una pestaña nueva es una línea en TOP_LEVEL_ROUTES, no un copy-paste.
  */
-enum class NaviRoute { TAREAS, CALENDARIO, AJUSTES }
+data class TopLevelRoute(
+    val key: NavKey,
+    val label: String,
+    val icon: ImageVector
+)
 
 /**
- * Barra de navegación inferior compartida por Tareas, Calendario y Ajustes.
- * Se extrajo a su propio archivo porque las 3 pantallas la necesitan (ver wireframes).
+ * Las 3 pantallas principales, en el orden en que aparecen en la barra.
+ * NaviApp también usa esta lista para decidir si muestra u oculta la barra.
+ */
+val TOP_LEVEL_ROUTES: List<TopLevelRoute> = listOf(
+    TopLevelRoute(Tareas, "Tareas", Icons.Default.CheckBox),
+    TopLevelRoute(Calendario, "Calendario", Icons.Default.CalendarMonth),
+    TopLevelRoute(Ajustes, "Ajustes", Icons.Default.Tune)
+)
+
+/**
+ * Barra de navegación inferior.
  *
- * @param selected pantalla actualmente activa (se resalta en el theme).
- * @param onSelect callback con la ruta elegida; cada pantalla decide qué hacer
- *   (por ahora, hasta que exista NavHost, puede ignorarse o loguearse).
+ * Nótese que ya no recibe un enum NaviRoute: recibe la NavKey que está
+ * actualmente en el tope del back stack. La barra no sabe nada de navegación,
+ * solo reporta qué tocó el usuario (state hoisting) — quien decide qué hacer
+ * con el back stack es NaviApp.
+ *
+ * @param current key en el tope del back stack; determina el ítem resaltado.
+ * @param onSelect se invoca con la key de la pestaña tocada.
  */
 @Composable
 fun NaviBottomBar(
-    selected: NaviRoute,
-    onSelect: (NaviRoute) -> Unit
+    current: NavKey?,
+    onSelect: (NavKey) -> Unit
 ) {
     NavigationBar {
-        NavigationBarItem(
-            selected = selected == NaviRoute.TAREAS,
-            onClick = { onSelect(NaviRoute.TAREAS) },
-            icon = { Icon(Icons.Default.CheckBox, contentDescription = "Tareas") },
-            label = { Text("Tareas") },
-            colors = NavigationBarItemDefaults.colors()
-        )
-        NavigationBarItem(
-            selected = selected == NaviRoute.CALENDARIO,
-            onClick = { onSelect(NaviRoute.CALENDARIO) },
-            icon = { Icon(Icons.Default.CalendarMonth, contentDescription = "Calendario") },
-            label = { Text("Calendario") }
-        )
-        NavigationBarItem(
-            selected = selected == NaviRoute.AJUSTES,
-            onClick = { onSelect(NaviRoute.AJUSTES) },
-            icon = { Icon(Icons.Default.Tune, contentDescription = "Ajustes") },
-            label = { Text("Ajustes") }
-        )
+        TOP_LEVEL_ROUTES.forEach { route ->
+            NavigationBarItem(
+                selected = current == route.key,
+                onClick = { onSelect(route.key) },
+                icon = { Icon(route.icon, contentDescription = route.label) },
+                label = { Text(route.label) }
+            )
+        }
     }
 }

@@ -64,7 +64,7 @@ fun NaviTheme(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onNavigate: (NaviRoute) -> Unit = {}) {
+fun SettingsScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -82,8 +82,8 @@ fun SettingsScreen(onNavigate: (NaviRoute) -> Unit = {}) {
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        },
-        bottomBar = { NaviBottomBar(selected = NaviRoute.AJUSTES, onSelect = onNavigate) }
+        }
+        // Sin bottomBar: la barra la provee NaviApp para las 3 pantallas top-level.
     ) { innerPadding ->
         Column(
             modifier = Modifier
