@@ -47,7 +47,8 @@ val TOP_LEVEL_ROUTES: List<TopLevelRoute> = listOf(
 @Composable
 fun NaviBottomBar(
     current: NavKey?,
-    onSelect: (NavKey) -> Unit
+    onSelect: (NavKey) -> Unit,
+    showLabels: Boolean = true
 ) {
     NavigationBar {
         TOP_LEVEL_ROUTES.forEach { route ->
@@ -55,7 +56,13 @@ fun NaviBottomBar(
                 selected = current == route.key,
                 onClick = { onSelect(route.key) },
                 icon = { Icon(route.icon, contentDescription = route.label) },
-                label = { Text(route.label) }
+                // NavigationBarItem acepta label = null: el ítem queda solo
+                // con el ícono, pero conserva el indicador de seleccionado.
+                label = if (showLabels) {
+                    { Text(route.label) }
+                } else {
+                    null
+                }
             )
         }
     }

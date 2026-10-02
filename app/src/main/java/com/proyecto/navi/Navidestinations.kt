@@ -23,14 +23,13 @@ data object Calendario : NavKey
 @Serializable
 data object Ajustes : NavKey
 
-/**
- * Pantalla de detalle: NO es top-level, así que se empuja encima del stack
- * y la bottom bar se esconde mientras esté visible.
- */
-@Serializable
-data object NuevaTarea : NavKey
-
 /*
+ * "Nueva tarea" NO está aquí: en vez de un destino empujado al back stack,
+ * ahora es un ModalBottomSheet manejado con estado local dentro de
+ * TasksScreen.kt (ver `showNewTaskSheet`). Eso nos da el look de "tray" sobre
+ * la pantalla de atrás, que NavDisplay no ofrece por defecto (reemplaza la
+ * pantalla completa en vez de apilar un overlay encima).
+ *
  * Cuando necesiten pasar argumentos (por ejemplo, abrir una tarea existente),
  * en Nav3 es simplemente un data class — sin rutas con placeholders ni Bundles:
  *

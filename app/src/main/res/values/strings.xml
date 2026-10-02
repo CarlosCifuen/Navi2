@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">Navi</string>
+
+    <!-- Compartidos -->
+    <string name="notificaciones">Notificaciones</string>
+
+    <!-- Tareas -->
+    <string name="nueva_tarea">Nueva tarea</string>
+    <string name="todas">Todas</string>
+    <string name="hoy">Hoy</string>
+    <string name="pendientes">Pendientes</string>
+    <string name="esta_semana">Esta semana</string>
+    <string name="completada">Completada</string>
+
+    <!-- Ajustes -->
+    <string name="ajustes">Ajustes</string>
+    <string name="h_bitos">Hábitos</string>
+    <string name="rachas_y_recordatorios">Rachas y recordatorios</string>
+    <string name="apariencia">Apariencia</string>
+    <string name="tema_claro_y_color_menta">Tema claro y color menta</string>
+    <string name="recordatorios_de_tareas">Recordatorios de tareas</string>
+    <string name="_15_minutos_antes">15 minutos antes</string>
+    <string name="resumen_diario">Resumen diario</string>
+    <string name="cada_d_a_a_las_7_00_p_m">Cada día a las 7:00 p. m.</string>
+    <string name="semana_inicia_el_lunes">Semana inicia el lunes</string>
+    <string name="idioma_espa_ol">Idioma: Español</string>
+    <string name="foto_de_perfil_de">Foto de perfil de %1$s</string>
+    <string name="editar">Editar</string>
+    <string name="mostrar_etiquetas_barra">Etiquetas de la barra inferior</string>
+    <string name="mostrar_etiquetas_barra_desc">Texto debajo de los íconos</string>
 </resources>

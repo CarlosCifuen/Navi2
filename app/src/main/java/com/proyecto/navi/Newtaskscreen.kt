@@ -3,11 +3,7 @@ package com.proyecto.navi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,12 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Pantalla de detalle (no top-level): se empuja encima del back stack desde el
- * FAB de Tareas. Sirve para demostrar la diferencia entre *cambiar de pestaña*
- * (reemplaza el stack) y *navegar hacia adentro* (agrega al stack).
- *
- * Mientras esta pantalla está arriba, NaviApp oculta la bottom bar y el botón
- * atrás del sistema la cierra automáticamente vía NavDisplay.onBack.
+ * Contenido del tray de "Nueva tarea": no es un destino de navegación, se
+ * muestra dentro de un ModalBottomSheet desde TasksScreen.kt. Cerrar el sheet
+ * (deslizar hacia abajo, tocar el scrim o el botón atrás del sistema) llama a
+ * onClose, que en TasksScreen simplemente pone showNewTaskSheet en false.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,14 +27,6 @@ fun NewTaskScreen(onClose: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Nueva tarea", style = MaterialTheme.typography.headlineSmall) },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Cerrar"
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
