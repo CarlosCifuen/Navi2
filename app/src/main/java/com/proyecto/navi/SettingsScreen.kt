@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -18,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -64,21 +64,19 @@ fun NaviTheme(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    showBottomBarLabels: Boolean = true,
+    onToggleBottomBarLabels: (Boolean) -> Unit = {}
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            // CenterAlignedTopAppBar en vez de TopAppBar: es el único cambio
+            // necesario para centrar el título, el resto del bloque es igual.
+            CenterAlignedTopAppBar(
                 title = {
-                    Column {
-                        Text("Ajustes", style = MaterialTheme.typography.headlineMedium)
-                        Text(
-                            "Personaliza tu experiencia",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(stringResource(R.string.ajustes), style = MaterialTheme.typography.headlineMedium)
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
@@ -109,19 +107,10 @@ fun SettingsScreen() {
             ) {
                 //composable
                 SettingsItem(
-                    icon = Icons.Default.List,
-                    iconTint = MintIconColors.navegacion,
-                    title = "Navegación",
-                    description = "Orden y pantalla inicial",
-                    onClick = { }
-                )
-                HorizontalDivider()
-                //composable
-                SettingsItem(
                     icon = Icons.Default.Star,
                     iconTint = MintIconColors.habitos,
-                    title = "Hábitos",
-                    description = "Rachas y recordatorios",
+                    title = stringResource(R.string.h_bitos),
+                    description = stringResource(R.string.rachas_y_recordatorios),
                     onClick = { }
                 )
                 HorizontalDivider()
@@ -129,8 +118,8 @@ fun SettingsScreen() {
                 SettingsItem(
                     icon = Icons.Default.Palette,
                     iconTint = MintIconColors.apariencia,
-                    title = "Apariencia",
-                    description = "Tema claro y color menta",
+                    title = stringResource(R.string.apariencia),
+                    description = stringResource(R.string.tema_claro_y_color_menta),
                     onClick = { }
                 )
             }
@@ -138,7 +127,7 @@ fun SettingsScreen() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                "NOTIFICACIONES",
+                stringResource(R.string.notificaciones),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -152,16 +141,16 @@ fun SettingsScreen() {
             ) {
                 //composable
                 NotificationToggleItem(
-                    title = "Recordatorios de tareas",
-                    description = "15 minutos antes",
+                    title = stringResource(R.string.recordatorios_de_tareas),
+                    description = stringResource(R.string._15_minutos_antes),
                     checked = true,
                     onCheckedChange = { }
                 )
                 HorizontalDivider()
                 //composable
                 NotificationToggleItem(
-                    title = "Resumen diario",
-                    description = "Cada día a las 7:00 p. m.",
+                    title = stringResource(R.string.resumen_diario),
+                    description = stringResource(R.string.cada_d_a_a_las_7_00_p_m),
                     checked = true,
                     onCheckedChange = { }
                 )
@@ -176,15 +165,27 @@ fun SettingsScreen() {
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            //composable
-            SettingsItem(
-                title = "Semana inicia el lunes",
-                description = "Idioma: Español",
-                onClick = { },
+            Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
+            ) {
+                //composable
+                SettingsItem(
+                    title = stringResource(R.string.semana_inicia_el_lunes),
+                    description = stringResource(R.string.idioma_espa_ol),
+                    onClick = { }
+                )
+                HorizontalDivider()
+                //composable
+                NotificationToggleItem(
+                    title = stringResource(R.string.mostrar_etiquetas_barra),
+                    description = stringResource(R.string.mostrar_etiquetas_barra_desc),
+                    checked = showBottomBarLabels,
+                    onCheckedChange = onToggleBottomBarLabels
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -212,7 +213,7 @@ fun ProfileCard(
     ) {
         AsyncImage(
             model = avatarUrl,
-            contentDescription = "Foto de perfil de $name",
+            contentDescription = stringResource(R.string.foto_de_perfil_de, name),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(48.dp)
@@ -228,7 +229,7 @@ fun ProfileCard(
             )
         }
         OutlinedButton(onClick = onEditClick) {
-            Text("Editar")
+            Text(stringResource(R.string.editar))
         }
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,10 +46,10 @@ data class Task(
     val avatarUrl: String
 )
 
-private enum class TaskFilter(val label: String) {
-    TODAS("Todas"),
-    HOY("Hoy"),
-    PENDIENTES("Pendientes")
+private enum class TaskFilter(val label: Int) {
+    TODAS(R.string.todas),
+    HOY(R.string.hoy),
+    PENDIENTES(R.string.pendientes)
 }
 
 /**
@@ -97,9 +97,9 @@ private fun sampleTasks(): List<Task> = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksScreen(
-    onAddTaskClick: () -> Unit = {}
-) {
+fun TasksScreen() {
+    var showNewTaskSheet by remember { mutableStateOf(false) }
+
     val allTasks = remember { sampleTasks() }
     var filter by remember { mutableStateOf(TaskFilter.TODAS) }
 
@@ -115,35 +115,14 @@ fun TasksScreen(
     val completedCount = remember(allTasks) { allTasks.count { it.isCompleted } }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Tareas", style = MaterialTheme.typography.headlineMedium)
-                        Text(
-                            "Organiza tu semana sin perder el ritmo",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Outlined.Notifications, contentDescription = "Notificaciones")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
+        // Sin topBar: Tareas ya no tiene barra superior, para mostrar más contenido.
         // Sin bottomBar: la barra la provee NaviApp para las 3 pantallas top-level.
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddTaskClick,
+                onClick = { showNewTaskSheet = true },
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nueva tarea")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.nueva_tarea))
             }
         }
     ) { innerPadding ->
@@ -180,6 +159,23 @@ fun TasksScreen(
             item(key = "bottom_spacer") { Spacer(modifier = Modifier.height(72.dp)) }
         }
     }
+
+    // El tray de "Nueva tarea": ModalBottomSheet ya trae el scrim (fondo oscurecido
+    // pero visible) y la animación de subir desde abajo, así que no hay que
+    // escribir ninguna animación a mano. skipPartiallyExpanded = true evita que
+    // el sheet se quede "a medias" al soltar: o está cerrado, o abierto a su
+    // altura completa (fija en 2/3 de pantalla con fillMaxHeight(0.67f) abajo).
+    if (showNewTaskSheet) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showNewTaskSheet = false },
+            sheetState = sheetState
+        ) {
+            Box(modifier = Modifier.fillMaxHeight(0.67f)) {
+                NewTaskScreen(onClose = { showNewTaskSheet = false })
+            }
+        }
+    }
 }
 
 @Composable
@@ -203,7 +199,7 @@ private fun WeeklySummaryCard(completed: Int, total: Int) {
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text("Esta semana", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.esta_semana), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
                 "$completed de $total tareas completadas",
                 style = MaterialTheme.typography.bodySmall,
@@ -229,7 +225,7 @@ private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    option.label,
+                    stringResource(option.label),
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelLarge
@@ -304,7 +300,7 @@ private fun CompletionIndicator(isCompleted: Boolean) {
         ) {
             Icon(
                 Icons.Default.Check,
-                contentDescription = "Completada",
+                contentDescription = stringResource(R.string.completada),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp)
             )

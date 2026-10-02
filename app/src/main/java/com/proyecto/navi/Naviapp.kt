@@ -3,6 +3,10 @@ package com.proyecto.navi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 // OJO: `entry` NO se importa. Es miembro del scope de entryProvider { },
@@ -28,8 +32,14 @@ fun NaviApp() {
 
     val currentKey: NavKey? = backStack.lastOrNull()
 
-    // La barra solo existe en las 3 pantallas principales; en NuevaTarea se oculta.
+    // La barra solo existe en las 3 pantallas principales.
     val isTopLevel = TOP_LEVEL_ROUTES.any { it.key == currentKey }
+
+    // Vive aquí (no en SettingsScreen ni en NaviBottomBar) porque ambos son
+    // hermanos bajo NaviApp y necesitan leer/escribir el mismo valor. Cuando
+    // tengamos persistencia (DataStore/Room) esto se movería ahí; por ahora,
+    // rememberSaveable alcanza para que sobreviva una rotación de pantalla.
+    var showBottomBarLabels by rememberSaveable { mutableStateOf(true) }
 
     /**
      * Cambio de pestaña, patrón "salir a través de Tareas":
@@ -48,7 +58,11 @@ fun NaviApp() {
     Scaffold(
         bottomBar = {
             if (isTopLevel) {
-                NaviBottomBar(current = currentKey, onSelect = selectTopLevel)
+                NaviBottomBar(
+                    current = currentKey,
+                    onSelect = selectTopLevel,
+                    showLabels = showBottomBarLabels
+                )
             }
         }
     ) { innerPadding ->
@@ -60,16 +74,13 @@ fun NaviApp() {
             // de la barra de estado se aplicaría dos veces.
             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
             entryProvider = entryProvider {
-                entry<Tareas> {
-                    TasksScreen(
-                        // Navegar = agregar una key al stack. Eso es todo.
-                        onAddTaskClick = { backStack.add(NuevaTarea) }
-                    )
-                }
+                entry<Tareas> { TasksScreen() }
                 entry<Calendario> { CalendarScreen() }
-                entry<Ajustes> { SettingsScreen() }
-                entry<NuevaTarea> {
-                    NewTaskScreen(onClose = { backStack.removeLastOrNull() })
+                entry<Ajustes> {
+                    SettingsScreen(
+                        showBottomBarLabels = showBottomBarLabels,
+                        onToggleBottomBarLabels = { showBottomBarLabels = it }
+                    )
                 }
             }
         )
