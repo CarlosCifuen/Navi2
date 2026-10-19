@@ -3,6 +3,13 @@
 
     <!-- Compartidos -->
     <string name="notificaciones">Notificaciones</string>
+    <string name="cancelar">Cancelar</string>
+
+    <!-- Barra inferior (también son el contentDescription de cada ícono,
+         así que son lo único que lee TalkBack con las etiquetas apagadas).
+         "Ajustes" reutiliza el string de la sección de abajo. -->
+    <string name="tareas">Tareas</string>
+    <string name="calendario">Calendario</string>
 
     <!-- Tareas -->
     <string name="nueva_tarea">Nueva tarea</string>
@@ -11,6 +18,18 @@
     <string name="pendientes">Pendientes</string>
     <string name="esta_semana">Esta semana</string>
     <string name="completada">Completada</string>
+    <string name="pendiente">Pendiente</string>
+    <string name="manana">Mañana</string>
+    <string name="todos_los_dias">Todos los días</string>
+    <!-- Con placeholders numerados: en otros idiomas el orden cambia. -->
+    <string name="tareas_completadas">%1$d de %2$d tareas completadas</string>
+
+    <!-- Etiquetas de tarea (enum TaskTag) -->
+    <string name="tag_alta">Alta</string>
+    <string name="tag_clase">Clase</string>
+    <string name="tag_idea">Idea</string>
+    <string name="tag_habito">Hábito</string>
+    <string name="tag_casa">Casa</string>
 
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>
@@ -28,4 +47,9 @@
     <string name="editar">Editar</string>
     <string name="mostrar_etiquetas_barra">Etiquetas de la barra inferior</string>
     <string name="mostrar_etiquetas_barra_desc">Texto debajo de los íconos</string>
+    <string name="general">GENERAL</string>
+    <string name="cambiar_foto">Cambiar foto de perfil</string>
+    <string name="subiendo_foto">Subiendo…</string>
+    <string name="error_subir_foto">No se pudo subir la foto: %1$s</string>
+    <string name="reintentar">Reintentar</string>
 </resources>
