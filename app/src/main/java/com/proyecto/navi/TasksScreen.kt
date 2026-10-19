@@ -20,99 +20,60 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-
-/**
- * Modelo inmutable de una tarea. `id` es el identificador estable que se usa
- * como key en items(...) más abajo: nunca cambia aunque la tarea se reordene,
- * se filtre o se marque como completada, a diferencia del índice de la lista.
- */
-data class Task(
-    val id: String,
-    val title: String,
-    val category: String,
-    val schedule: String,
-    val tag: String,
-    val tagColor: Color,
-    val tagTextColor: Color,
-    val isCompleted: Boolean,
-    val avatarUrl: String
-)
-
-private enum class TaskFilter(val label: Int) {
-    TODAS(R.string.todas),
-    HOY(R.string.hoy),
-    PENDIENTES(R.string.pendientes)
-}
-
-/**
- * Paleta de colores para las etiquetas (chips) de cada tarea, siguiendo la
- * misma idea de MintIconColors que ya se usa en SettingsScreen.kt.
- */
-private object TagColors {
-    val altaBg = Color(0xFFFBE3D0); val altaText = Color(0xFFB25E1E)
-    val claseBg = Color(0xFFDCE7FB); val claseText = Color(0xFF2E5FAE)
-    val ideaBg = Color(0xFFDDF3E8); val ideaText = Color(0xFF2F8A5B)
-    val habitoBg = Color(0xFFDDF3E8); val habitoText = Color(0xFF2F8A5B)
-    val casaBg = Color(0xFFFBE3D0); val casaText = Color(0xFFB25E1E)
-}
-
-/**
- * Datos de ejemplo en memoria (todavía sin ViewModel ni API real; eso llega
- * más adelante en el curso). Se preparan una sola vez fuera del Composable
- * del ítem para no repetir cálculos en cada recomposición.
- */
-private fun sampleTasks(): List<Task> = listOf(
-    Task("t1", "Tarea 1 de ecuaciones", "Universidad", "Hoy · 6:00 p. m.", "Alta", TagColors.altaBg, TagColors.altaText, true, "https://api.dicebear.com/9.x/shapes/png?seed=ecuaciones"),
-    Task("t2", "Programación móvil", "Universidad", "Mañana · 10:00 a. m.", "Clase", TagColors.claseBg, TagColors.claseText, true, "https://api.dicebear.com/9.x/shapes/png?seed=movil"),
-    Task("t3", "Idear prompt", "Universidad", "Viernes · 4:30 p. m.", "Idea", TagColors.ideaBg, TagColors.ideaText, false, "https://api.dicebear.com/9.x/shapes/png?seed=prompt"),
-    Task("t4", "Entregar wireframes", "Universidad", "Hoy · 8:00 p. m.", "Alta", TagColors.altaBg, TagColors.altaText, false, "https://api.dicebear.com/9.x/shapes/png?seed=wireframes"),
-    Task("t5", "Leer capítulo 3", "Universidad", "Lunes · 9:00 a. m.", "Clase", TagColors.claseBg, TagColors.claseText, false, "https://api.dicebear.com/9.x/shapes/png?seed=lectura"),
-    Task("t6", "Preparar exposición", "Universidad", "Jueves · 2:00 p. m.", "Clase", TagColors.claseBg, TagColors.claseText, false, "https://api.dicebear.com/9.x/shapes/png?seed=exposicion"),
-    Task("t7", "Comida de Laika", "Casa", "Todos los días · 7:00 p. m.", "Hábito", TagColors.habitoBg, TagColors.habitoText, false, "https://api.dicebear.com/9.x/shapes/png?seed=laika"),
-    Task("t8", "Lavar la ropa", "Casa", "Sábado · 9:00 a. m.", "Casa", TagColors.casaBg, TagColors.casaText, true, "https://api.dicebear.com/9.x/shapes/png?seed=ropa"),
-    Task("t9", "Regar las plantas", "Casa", "Hoy · 8:00 a. m.", "Hábito", TagColors.habitoBg, TagColors.habitoText, true, "https://api.dicebear.com/9.x/shapes/png?seed=plantas"),
-    Task("t10", "Sacar la basura", "Casa", "Miércoles · 8:00 p. m.", "Casa", TagColors.casaBg, TagColors.casaText, false, "https://api.dicebear.com/9.x/shapes/png?seed=basura"),
-    Task("t11", "Pagar servicios", "Casa", "Viernes · 5:00 p. m.", "Casa", TagColors.casaBg, TagColors.casaText, false, "https://api.dicebear.com/9.x/shapes/png?seed=servicios"),
-    Task("t12", "Meditar 10 minutos", "Casa", "Todos los días · 7:00 a. m.", "Hábito", TagColors.habitoBg, TagColors.habitoText, true, "https://api.dicebear.com/9.x/shapes/png?seed=meditar")
-)
+import com.proyecto.navi.data.Task
+import com.proyecto.navi.data.TaskTag
 
 /**
  * Pantalla principal de Tareas (LazyColumn agrupado por categoría).
  *
+ * Ya no tiene datos propios: el modelo Task vive en data/, los datos salen de
+ * Room y el filtrado ocurre en el ViewModel. Esta función solo pinta estado y
+ * reporta intenciones hacia arriba.
+ *
  * Por qué LazyColumn y no un grid: cada tarea es una fila de información
  * textual (título, categoría, hora, prioridad) que el usuario objetivo
  * -estudiantes y trabajadores organizando su semana- necesita leer de
- * arriba hacia abajo, comparando urgencia y hora. Con 12+ tareas esperadas
- * por semana, una lista vertical de una sola columna es más legible que un
- * grid, que serviría mejor para contenido visual (fotos, íconos grandes)
- * donde el orden de lectura importa menos que la exploración libre.
+ * arriba hacia abajo, comparando urgencia y hora.
+ */
+@Composable
+fun TasksScreen(
+    viewModel: TasksViewModel = viewModel(factory = TasksViewModel.Factory)
+) {
+    // collectAsStateWithLifecycle y no collectAsState: deja de recolectar
+    // cuando la pantalla pasa a segundo plano, en vez de seguir trabajando.
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    TasksScreen(
+        uiState = uiState,
+        onSelectFilter = viewModel::setFilter,
+        onToggleCompleted = viewModel::toggleCompleted
+    )
+}
+
+/**
+ * Versión sin estado: recibe todo lo que pinta y reporta lo que el usuario hace.
+ *
+ * La separación existe para que los @Preview sigan funcionando. Un preview no
+ * puede construir un ViewModel que abre Room, así que le pasa un TasksUiState
+ * armado a mano y listo.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksScreen() {
+fun TasksScreen(
+    uiState: TasksUiState,
+    onSelectFilter: (TaskFilter) -> Unit,
+    onToggleCompleted: (Task) -> Unit
+) {
     var showNewTaskSheet by remember { mutableStateOf(false) }
-
-    val allTasks = remember { sampleTasks() }
-    var filter by remember { mutableStateOf(TaskFilter.TODAS) }
-
-    // Filtrado preparado antes de pasarlo a la lista, no dentro del ítem.
-    val visibleTasks = remember(filter, allTasks) {
-        when (filter) {
-            TaskFilter.TODAS -> allTasks
-            TaskFilter.HOY -> allTasks.filter { it.schedule.startsWith("Hoy") }
-            TaskFilter.PENDIENTES -> allTasks.filter { !it.isCompleted }
-        }
-    }
-    val grouped = remember(visibleTasks) { visibleTasks.groupBy { it.category } }
-    val completedCount = remember(allTasks) { allTasks.count { it.isCompleted } }
 
     Scaffold(
         // Sin topBar: Tareas ya no tiene barra superior, para mostrar más contenido.
@@ -134,14 +95,20 @@ fun TasksScreen() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item(key = "summary") {
-                WeeklySummaryCard(completed = completedCount, total = allTasks.size)
+                WeeklySummaryCard(
+                    completed = uiState.completedCount,
+                    total = uiState.totalCount
+                )
             }
 
             item(key = "filters") {
-                FilterRow(selected = filter, onSelect = { filter = it })
+                FilterRow(
+                    selected = uiState.filter,
+                    onSelect = onSelectFilter
+                )
             }
 
-            grouped.forEach { (category, tasks) ->
+            uiState.grouped.forEach { (category, tasks) ->
                 item(key = "header_$category") {
                     Text(
                         category.uppercase(),
@@ -152,7 +119,10 @@ fun TasksScreen() {
                     )
                 }
                 items(tasks, key = { it.id }) { task ->
-                    TaskCard(task = task, onClick = { })
+                    TaskCard(
+                        task = task,
+                        onToggleCompleted = { onToggleCompleted(task) }
+                    )
                 }
             }
 
@@ -160,11 +130,8 @@ fun TasksScreen() {
         }
     }
 
-    // El tray de "Nueva tarea": ModalBottomSheet ya trae el scrim (fondo oscurecido
-    // pero visible) y la animación de subir desde abajo, así que no hay que
-    // escribir ninguna animación a mano. skipPartiallyExpanded = true evita que
-    // el sheet se quede "a medias" al soltar: o está cerrado, o abierto a su
-    // altura completa (fija en 2/3 de pantalla con fillMaxHeight(0.67f) abajo).
+    // El tray de "Nueva tarea": ModalBottomSheet ya trae el scrim y la animación
+    // de subir desde abajo, así que no hay que escribir ninguna animación a mano.
     if (showNewTaskSheet) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
@@ -199,9 +166,13 @@ private fun WeeklySummaryCard(completed: Int, total: Int) {
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text(stringResource(R.string.esta_semana), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "$completed de $total tareas completadas",
+                stringResource(R.string.esta_semana),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                stringResource(R.string.tareas_completadas, completed, total),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -225,7 +196,7 @@ private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    stringResource(option.label),
+                    stringResource(option.labelRes),
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelLarge
@@ -236,17 +207,18 @@ private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
 }
 
 /**
- * Composable propio del ítem de la lista, separado de TasksScreen.
- * Es clicable (Modifier.clickable) y produce una acción observable via onClick.
+ * Ítem de la lista. El indicador de completada ahora es clicable: ese toque
+ * escribe en Room, y la lista se actualiza porque el DAO expone un Flow.
  */
 @Composable
-private fun TaskCard(task: Task, onClick: (Task) -> Unit) {
+private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
+    val (tagBg, tagText) = task.tag.colors()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable { onClick(task) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -260,7 +232,10 @@ private fun TaskCard(task: Task, onClick: (Task) -> Unit) {
         )
         Spacer(modifier = Modifier.width(10.dp))
 
-        CompletionIndicator(isCompleted = task.isCompleted)
+        CompletionIndicator(
+            isCompleted = task.isCompleted,
+            onClick = onToggleCompleted
+        )
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
@@ -270,7 +245,7 @@ private fun TaskCard(task: Task, onClick: (Task) -> Unit) {
                 textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
             )
             Text(
-                task.schedule,
+                scheduleText(task),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -280,27 +255,32 @@ private fun TaskCard(task: Task, onClick: (Task) -> Unit) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(task.tagColor)
+                .background(tagBg)
                 .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
-            Text(task.tag, style = MaterialTheme.typography.labelMedium, color = task.tagTextColor)
+            Text(task.tag.label(), style = MaterialTheme.typography.labelMedium, color = tagText)
         }
     }
 }
 
 @Composable
-private fun CompletionIndicator(isCompleted: Boolean) {
+private fun CompletionIndicator(isCompleted: Boolean, onClick: () -> Unit) {
+    val description = stringResource(
+        if (isCompleted) R.string.completada else R.string.pendiente
+    )
+
     if (isCompleted) {
         Box(
             modifier = Modifier
                 .size(24.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp)),
+                .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
+                .clickable(onClickLabel = description, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.Check,
-                contentDescription = stringResource(R.string.completada),
+                contentDescription = description,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp)
             )
@@ -311,14 +291,36 @@ private fun CompletionIndicator(isCompleted: Boolean) {
                 .size(24.dp)
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                .clickable(onClickLabel = description, onClick = onClick)
         )
     }
+}
+
+/**
+ * Datos de ejemplo SOLO para los previews. Los datos reales salen de Room
+ * (ver data/SeedData.kt); esto nunca llega al dispositivo.
+ */
+private fun previewUiState(): TasksUiState {
+    val now = System.currentTimeMillis()
+    val tasks = listOf(
+        Task("p1", "Entregar wireframes", "Universidad", TaskTag.ALTA, now, false, false, ""),
+        Task("p2", "Programación móvil", "Universidad", TaskTag.CLASE, now, false, true, ""),
+        Task("p3", "Regar las plantas", "Casa", TaskTag.HABITO, now, true, false, "")
+    )
+    return TasksUiState(
+        grouped = tasks.groupBy { it.category },
+        filter = TaskFilter.TODAS,
+        completedCount = tasks.count { it.isCompleted },
+        totalCount = tasks.size
+    )
 }
 
 @Preview(showBackground = true, name = "Tareas - Modo claro")
 @Composable
 private fun TasksScreenLightPreview() {
-    NaviTheme(darkTheme = false) { TasksScreen() }
+    NaviTheme(darkTheme = false) {
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {})
+    }
 }
 
 @Preview(
@@ -328,5 +330,7 @@ private fun TasksScreenLightPreview() {
 )
 @Composable
 private fun TasksScreenDarkPreview() {
-    NaviTheme(darkTheme = true) { TasksScreen() }
+    NaviTheme(darkTheme = true) {
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {})
+    }
 }

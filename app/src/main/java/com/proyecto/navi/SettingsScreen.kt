@@ -1,5 +1,8 @@
 package com.proyecto.navi
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,6 +14,9 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +72,43 @@ fun NaviTheme(
 @Composable
 fun SettingsScreen(
     showBottomBarLabels: Boolean = true,
-    onToggleBottomBarLabels: (Boolean) -> Unit = {}
+    onToggleBottomBarLabels: (Boolean) -> Unit = {},
+    profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
+) {
+    val profile by profileViewModel.uiState.collectAsStateWithLifecycle()
+
+    // El photo picker del sistema (Android 13+, con backport automático en
+    // versiones anteriores) NO requiere permiso de almacenamiento: el usuario
+    // elige la foto en una UI del sistema y la app solo recibe ese Uri.
+    val pickImage = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let(profileViewModel::uploadAvatar) }
+
+    SettingsScreen(
+        showBottomBarLabels = showBottomBarLabels,
+        onToggleBottomBarLabels = onToggleBottomBarLabels,
+        profile = profile,
+        onPickPhoto = {
+            pickImage.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        onDismissError = profileViewModel::dismissError
+    )
+}
+
+/**
+ * Versión sin estado, para que los @Preview no tengan que construir un
+ * ViewModel que abre Room.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    showBottomBarLabels: Boolean,
+    onToggleBottomBarLabels: (Boolean) -> Unit,
+    profile: ProfileUiState,
+    onPickPhoto: () -> Unit,
+    onDismissError: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -90,11 +132,17 @@ fun SettingsScreen(
                 .fillMaxSize()
         ) {
             ProfileCard(
-                name = "Marlos",
-                subtitle = "placeholder",
-                avatarUrl = "https://media1.tenor.com/m/ITyftHRkwiMAAAAd/monkey-monkey-thinking.gif",
-                onEditClick = { }
+                name = profile.name,
+                subtitle = profile.subtitle,
+                avatarUrl = profile.avatarUrl,
+                isUploading = profile.uploadState is UploadState.Uploading,
+                onEditClick = onPickPhoto
             )
+
+            (profile.uploadState as? UploadState.Error)?.let { error ->
+                Spacer(modifier = Modifier.height(8.dp))
+                UploadErrorBanner(message = error.message, onDismiss = onDismissError)
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -159,7 +207,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                "GENERAL",
+                stringResource(R.string.general),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -200,7 +248,8 @@ fun SettingsScreen(
 fun ProfileCard(
     name: String,
     subtitle: String,
-    avatarUrl: String,
+    avatarUrl: String?,
+    isUploading: Boolean,
     onEditClick: () -> Unit
 ) {
     Row(
@@ -211,25 +260,78 @@ fun ProfileCard(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = avatarUrl,
-            contentDescription = stringResource(R.string.foto_de_perfil_de, name),
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-        )
+        Box(
+            modifier = Modifier.size(48.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (avatarUrl.isNullOrBlank()) {
+                // Todavía no hay foto subida: círculo con la inicial.
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        name.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            } else {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = stringResource(R.string.foto_de_perfil_de, name),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+            }
+
+            if (isUploading) {
+                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+            }
+        }
+
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                subtitle,
+                if (isUploading) stringResource(R.string.subiendo_foto) else subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        OutlinedButton(onClick = onEditClick) {
+        OutlinedButton(onClick = onEditClick, enabled = !isUploading) {
             Text(stringResource(R.string.editar))
+        }
+    }
+}
+
+/**
+ * Aviso de error de subida. Se muestra en la pantalla en vez de un Toast para
+ * que el usuario pueda leerlo con calma y reintentar.
+ */
+@Composable
+private fun UploadErrorBanner(message: String, onDismiss: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            stringResource(R.string.error_subir_foto, message),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.cancelar))
         }
     }
 }
@@ -309,11 +411,24 @@ fun NotificationToggleItem(
     }
 }
 
+/** Perfil de ejemplo solo para los previews. */
+private fun previewProfile() = ProfileUiState(
+    name = "Marlos",
+    subtitle = "placeholder",
+    avatarUrl = null
+)
+
 @Preview(showBackground = true, name = "Ajustes - Modo claro")
 @Composable
 fun SettingsScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        SettingsScreen()
+        SettingsScreen(
+            showBottomBarLabels = true,
+            onToggleBottomBarLabels = {},
+            profile = previewProfile(),
+            onPickPhoto = {},
+            onDismissError = {}
+        )
     }
 }
 
@@ -325,6 +440,12 @@ fun SettingsScreenLightPreview() {
 @Composable
 fun SettingsScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        SettingsScreen()
+        SettingsScreen(
+            showBottomBarLabels = false,
+            onToggleBottomBarLabels = {},
+            profile = previewProfile(),
+            onPickPhoto = {},
+            onDismissError = {}
+        )
     }
 }
