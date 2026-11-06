@@ -52,4 +52,25 @@
     <string name="subiendo_foto">Subiendo…</string>
     <string name="error_subir_foto">No se pudo subir la foto: %1$s</string>
     <string name="reintentar">Reintentar</string>
+
+    <!-- Calendario -->
+    <string-array name="dias_semana_inicial">
+        <item>D</item>
+        <item>L</item>
+        <item>M</item>
+        <item>M</item>
+        <item>J</item>
+        <item>V</item>
+        <item>S</item>
+    </string-array>
+    <plurals name="actividades">
+        <item quantity="one">%d actividad</item>
+        <item quantity="other">%d actividades</item>
+    </plurals>
+    <string name="sin_actividades">No hay actividades para este día</string>
+    <string name="mes_anterior">Mes anterior</string>
+    <string name="mes_siguiente">Mes siguiente</string>
+    <string name="dia_con_tareas">Día con tareas</string>
+    <string name="dia_seleccionado">Seleccionado</string>
+    <string name="habito_diario">Hábito diario</string>
 </resources>

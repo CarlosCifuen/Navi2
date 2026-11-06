@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -28,7 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.proyecto.navi.data.Task
 import com.proyecto.navi.data.TaskTag
 
@@ -222,16 +220,6 @@ private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = task.avatarUrl,
-            contentDescription = null,
-            placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-
         CompletionIndicator(
             isCompleted = task.isCompleted,
             onClick = onToggleCompleted
