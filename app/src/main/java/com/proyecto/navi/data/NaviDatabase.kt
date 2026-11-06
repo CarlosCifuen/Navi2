@@ -1,6 +1,7 @@
 package com.proyecto.navi.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -27,7 +28,11 @@ class Converters {
 
 @Database(
     entities = [Task::class, Profile::class],
-    version = 1,
+    version = 2,
+    // Solo se agregó una columna (tasks.priority), así que Room puede generar la
+    // migración solo comparando schemas/.../1.json con el esquema nuevo. Al
+    // compilar se crea 2.json: hay que commitearlo junto con el código.
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
     exportSchema = true
 )
 @TypeConverters(Converters::class)

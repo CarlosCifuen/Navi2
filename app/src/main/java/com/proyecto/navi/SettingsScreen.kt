@@ -175,7 +175,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                stringResource(R.string.notificaciones),
+                stringResource(R.string.recordatorios),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
@@ -189,16 +189,7 @@ fun SettingsScreen(
             ) {
                 //composable
                 NotificationToggleItem(
-                    title = stringResource(R.string.recordatorios_de_tareas),
-                    description = stringResource(R.string._15_minutos_antes),
-                    checked = true,
-                    onCheckedChange = { }
-                )
-                HorizontalDivider()
-                //composable
-                NotificationToggleItem(
-                    title = stringResource(R.string.resumen_diario),
-                    description = stringResource(R.string.cada_d_a_a_las_7_00_p_m),
+                    title = stringResource(R.string.notificaciones_activadas),
                     checked = true,
                     onCheckedChange = { }
                 )
@@ -220,21 +211,27 @@ fun SettingsScreen(
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 //composable
-                SettingsItem(
-                    title = stringResource(R.string.semana_inicia_el_lunes),
-                    description = stringResource(R.string.idioma_espa_ol),
-                    onClick = { }
-                )
-                HorizontalDivider()
-                //composable
                 NotificationToggleItem(
                     title = stringResource(R.string.mostrar_etiquetas_barra),
                     description = stringResource(R.string.mostrar_etiquetas_barra_desc),
                     checked = showBottomBarLabels,
                     onCheckedChange = onToggleBottomBarLabels
                 )
+                HorizontalDivider()
+                //composable
+                SettingsItem(
+                    title = stringResource(R.string.inicio_de_semana),
+                    value = stringResource(R.string.lunes),
+                    onClick = { }
+                )
+                HorizontalDivider()
+                //composable
+                SettingsItem(
+                    title = stringResource(R.string.idioma),
+                    value = stringResource(R.string.espanol),
+                    onClick = { }
+                )
             }
-
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -337,13 +334,17 @@ private fun UploadErrorBanner(message: String, onDismiss: () -> Unit) {
 }
 
 /**
- * Ítem reutilizable de ajuste con ícono, título, descripción y acción al tocar.
- * Se usa 4 veces en esta pantalla: Navegación, Hábitos, Apariencia, Semana inicia el lunes.
+ * Ítem reutilizable de ajuste con ícono, título y acción al tocar.
+ *
+ * `description` es opcional (línea chica debajo del título) y `value` también
+ * (la opción elegida, alineada a la derecha, como "Lunes" o "Español").
+ * Se usa en Hábitos, Apariencia, Inicio de semana e Idioma.
  */
 @Composable
 fun SettingsItem(
     title: String,
-    description: String,
+    description: String? = null,
+    value: String? = null,
     onClick: () -> Unit,
     icon: ImageVector? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
@@ -374,9 +375,19 @@ fun SettingsItem(
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
+            if (description != null) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (value != null) {
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
-                description,
-                style = MaterialTheme.typography.bodySmall,
+                value,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -389,7 +400,7 @@ fun SettingsItem(
 @Composable
 fun NotificationToggleItem(
     title: String,
-    description: String,
+    description: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -401,11 +412,13 @@ fun NotificationToggleItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
-            Text(
-                description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (description != null) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }

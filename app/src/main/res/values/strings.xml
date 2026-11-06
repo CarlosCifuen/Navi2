@@ -2,7 +2,7 @@
     <string name="app_name">Navi</string>
 
     <!-- Compartidos -->
-    <string name="notificaciones">Notificaciones</string>
+    <string name="recordatorios">Recordatorios</string>
     <string name="cancelar">Cancelar</string>
 
     <!-- Barra inferior (también son el contentDescription de cada ícono,
@@ -24,32 +24,47 @@
     <!-- Con placeholders numerados: en otros idiomas el orden cambia. -->
     <string name="tareas_completadas">%1$d de %2$d tareas completadas</string>
 
-    <!-- Etiquetas de tarea (enum TaskTag) -->
-    <string name="tag_alta">Alta</string>
-    <string name="tag_clase">Clase</string>
-    <string name="tag_idea">Idea</string>
-    <string name="tag_habito">Hábito</string>
-    <string name="tag_casa">Casa</string>
-
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>
     <string name="h_bitos">Hábitos</string>
     <string name="rachas_y_recordatorios">Rachas y recordatorios</string>
     <string name="apariencia">Apariencia</string>
     <string name="tema_claro_y_color_menta">Tema claro y color menta</string>
-    <string name="recordatorios_de_tareas">Recordatorios de tareas</string>
-    <string name="_15_minutos_antes">15 minutos antes</string>
+    <string name="notificaciones_activadas">Notificaciones activadas</string>
     <string name="resumen_diario">Resumen diario</string>
     <string name="cada_d_a_a_las_7_00_p_m">Cada día a las 7:00 p. m.</string>
-    <string name="semana_inicia_el_lunes">Semana inicia el lunes</string>
-    <string name="idioma_espa_ol">Idioma: Español</string>
+    <string name="inicio_de_semana">Inicio de semana</string>
+    <string name="lunes">Lunes</string>
+    <string name="idioma">Idioma</string>
+    <string name="espanol">Español</string>
     <string name="foto_de_perfil_de">Foto de perfil de %1$s</string>
     <string name="editar">Editar</string>
     <string name="mostrar_etiquetas_barra">Etiquetas de la barra inferior</string>
     <string name="mostrar_etiquetas_barra_desc">Texto debajo de los íconos</string>
-    <string name="general">GENERAL</string>
+    <string name="general">General</string>
     <string name="cambiar_foto">Cambiar foto de perfil</string>
     <string name="subiendo_foto">Subiendo…</string>
     <string name="error_subir_foto">No se pudo subir la foto: %1$s</string>
     <string name="reintentar">Reintentar</string>
+
+    <!-- Calendario -->
+    <string-array name="dias_semana_inicial">
+        <item>D</item>
+        <item>L</item>
+        <item>M</item>
+        <item>M</item>
+        <item>J</item>
+        <item>V</item>
+        <item>S</item>
+    </string-array>
+    <plurals name="actividades">
+        <item quantity="one">%d actividad</item>
+        <item quantity="other">%d actividades</item>
+    </plurals>
+    <string name="sin_actividades">No hay actividades para este día</string>
+    <string name="mes_anterior">Mes anterior</string>
+    <string name="mes_siguiente">Mes siguiente</string>
+    <string name="dia_con_tareas">Día con tareas</string>
+    <string name="dia_seleccionado">Seleccionado</string>
+    <string name="habito_diario">Hábito diario</string>
 </resources>
