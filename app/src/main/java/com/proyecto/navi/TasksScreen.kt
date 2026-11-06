@@ -20,8 +20,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -111,7 +115,7 @@ fun TasksScreen(
                     Text(
                         category.uppercase(),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = categoryColor(category),
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                     )
@@ -205,13 +209,14 @@ private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
 }
 
 /**
- * Ítem de la lista. El indicador de completada ahora es clicable: ese toque
- * escribe en Room, y la lista se actualiza porque el DAO expone un Flow.
+ * Ítem de la lista. El indicador de completada es clicable: ese toque escribe
+ * en Room, y la lista se actualiza porque el DAO expone un Flow.
+ *
+ * El checkbox toma el color de la categoría; la prioridad va al inicio de la
+ * línea de abajo ("!!! Hoy · 6:00 p. m.").
  */
 @Composable
 private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
-    val (tagBg, tagText) = task.tag.colors()
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,6 +227,7 @@ private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
     ) {
         CompletionIndicator(
             isCompleted = task.isCompleted,
+            accent = categoryColor(task.category),
             onClick = onToggleCompleted
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -232,27 +238,35 @@ private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
                 textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
             )
-            Text(
-                scheduleText(task),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(tagBg)
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
-            Text(task.tag.label(), style = MaterialTheme.typography.labelMedium, color = tagText)
+            TaskSubtitle(task)
         }
     }
 }
 
+/** "!!! Hoy · 6:00 p. m.": signos de prioridad en rojo y el horario normal. */
 @Composable
-private fun CompletionIndicator(isCompleted: Boolean, onClick: () -> Unit) {
+private fun TaskSubtitle(task: Task) {
+    val priorityColor = MaterialTheme.colorScheme.error
+    val schedule = scheduleText(task)
+    val text = buildAnnotatedString {
+        val level = task.priority.coerceIn(0, 3)
+        if (level > 0) {
+            withStyle(SpanStyle(color = priorityColor, fontWeight = FontWeight.Bold)) {
+                append("!".repeat(level))
+            }
+            append(" ")
+        }
+        append(schedule)
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun CompletionIndicator(isCompleted: Boolean, accent: Color, onClick: () -> Unit) {
     val description = stringResource(
         if (isCompleted) R.string.completada else R.string.pendiente
     )
@@ -262,14 +276,14 @@ private fun CompletionIndicator(isCompleted: Boolean, onClick: () -> Unit) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp))
+                .border(1.5.dp, accent, RoundedCornerShape(6.dp))
                 .clickable(onClickLabel = description, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.Check,
                 contentDescription = description,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = accent,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -278,7 +292,7 @@ private fun CompletionIndicator(isCompleted: Boolean, onClick: () -> Unit) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                .background(accent.copy(alpha = 0.35f))
                 .clickable(onClickLabel = description, onClick = onClick)
         )
     }
@@ -291,9 +305,9 @@ private fun CompletionIndicator(isCompleted: Boolean, onClick: () -> Unit) {
 private fun previewUiState(): TasksUiState {
     val now = System.currentTimeMillis()
     val tasks = listOf(
-        Task("p1", "Entregar wireframes", "Universidad", TaskTag.ALTA, now, false, false, ""),
-        Task("p2", "Programación móvil", "Universidad", TaskTag.CLASE, now, false, true, ""),
-        Task("p3", "Regar las plantas", "Casa", TaskTag.HABITO, now, true, false, "")
+        Task("p1", "Entregar wireframes", "Universidad", TaskTag.ALTA, now, false, false, "", priority = 3),
+        Task("p2", "Programación móvil", "Universidad", TaskTag.CLASE, now, false, true, "", priority = 2),
+        Task("p3", "Regar las plantas", "Casa", TaskTag.HABITO, now, true, false, "", priority = 1)
     )
     return TasksUiState(
         grouped = tasks.groupBy { it.category },

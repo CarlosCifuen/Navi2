@@ -27,18 +27,18 @@ private const val DICEBEAR = "https://api.dicebear.com/9.x/shapes/png?seed="
  * si el usuario marca una tarea, el cambio persiste entre reinicios.
  */
 fun seedTasks(): List<Task> = listOf(
-    Task("t1", "Tarea 1 de ecuaciones", "Universidad", TaskTag.ALTA, at(0, 18), false, true, "${DICEBEAR}ecuaciones"),
-    Task("t2", "Programación móvil", "Universidad", TaskTag.CLASE, at(1, 10), false, true, "${DICEBEAR}movil"),
-    Task("t3", "Idear prompt", "Universidad", TaskTag.IDEA, at(4, 16, 30), false, false, "${DICEBEAR}prompt"),
-    Task("t4", "Entregar wireframes", "Universidad", TaskTag.ALTA, at(0, 20), false, false, "${DICEBEAR}wireframes"),
-    Task("t5", "Leer capítulo 3", "Universidad", TaskTag.CLASE, at(5, 9), false, false, "${DICEBEAR}lectura"),
-    Task("t6", "Preparar exposición", "Universidad", TaskTag.CLASE, at(3, 14), false, false, "${DICEBEAR}exposicion"),
-    Task("t7", "Comida de Laika", "Casa", TaskTag.HABITO, at(0, 19), true, false, "${DICEBEAR}laika"),
-    Task("t8", "Lavar la ropa", "Casa", TaskTag.CASA, at(2, 9), false, true, "${DICEBEAR}ropa"),
-    Task("t9", "Regar las plantas", "Casa", TaskTag.HABITO, at(0, 8), false, true, "${DICEBEAR}plantas"),
-    Task("t10", "Sacar la basura", "Casa", TaskTag.CASA, at(6, 20), false, false, "${DICEBEAR}basura"),
-    Task("t11", "Pagar servicios", "Casa", TaskTag.CASA, at(4, 17), false, false, "${DICEBEAR}servicios"),
-    Task("t12", "Meditar 10 minutos", "Casa", TaskTag.HABITO, at(0, 7), true, true, "${DICEBEAR}meditar")
+    Task("t1", "Tarea 1 de ecuaciones", "Universidad", TaskTag.ALTA, at(0, 18), false, true, "${DICEBEAR}ecuaciones", priority = 3),
+    Task("t2", "Programación móvil", "Universidad", TaskTag.CLASE, at(1, 10), false, true, "${DICEBEAR}movil", priority = 2),
+    Task("t3", "Idear prompt", "Universidad", TaskTag.IDEA, at(4, 16, 30), false, false, "${DICEBEAR}prompt", priority = 1),
+    Task("t4", "Entregar wireframes", "Universidad", TaskTag.ALTA, at(0, 20), false, false, "${DICEBEAR}wireframes", priority = 3),
+    Task("t5", "Leer capítulo 3", "Universidad", TaskTag.CLASE, at(5, 9), false, false, "${DICEBEAR}lectura", priority = 2),
+    Task("t6", "Preparar exposición", "Universidad", TaskTag.CLASE, at(3, 14), false, false, "${DICEBEAR}exposicion", priority = 2),
+    Task("t7", "Comida de Laika", "Casa", TaskTag.HABITO, at(0, 19), true, false, "${DICEBEAR}laika", priority = 1),
+    Task("t8", "Lavar la ropa", "Casa", TaskTag.CASA, at(2, 9), false, true, "${DICEBEAR}ropa", priority = 1),
+    Task("t9", "Regar las plantas", "Casa", TaskTag.HABITO, at(0, 8), false, true, "${DICEBEAR}plantas", priority = 1),
+    Task("t10", "Sacar la basura", "Casa", TaskTag.CASA, at(6, 20), false, false, "${DICEBEAR}basura", priority = 1),
+    Task("t11", "Pagar servicios", "Casa", TaskTag.CASA, at(4, 17), false, false, "${DICEBEAR}servicios", priority = 2),
+    Task("t12", "Meditar 10 minutos", "Casa", TaskTag.HABITO, at(0, 7), true, true, "${DICEBEAR}meditar", priority = 1)
 )
 
 /** Perfil inicial. avatarUrl arranca en null hasta que se suba una foto. */
