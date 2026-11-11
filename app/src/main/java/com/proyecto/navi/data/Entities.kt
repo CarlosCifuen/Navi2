@@ -1,5 +1,6 @@
 package com.proyecto.navi.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -36,7 +37,17 @@ data class Task(
     /** Hábito diario ("Todos los días · 7:00 p. m."), no vence una sola vez. */
     val isDaily: Boolean = false,
     val isCompleted: Boolean = false,
-    val avatarUrl: String
+    val avatarUrl: String,
+    /**
+     * Prioridad de 1 a 3 (1 = baja, 2 = media, 3 = alta). Se guarda como
+     * número y no como texto porque la UI la pinta con "!".repeat(priority).
+     *
+     * defaultValue es lo que permite la migración 1 -> 2: las filas que ya
+     * existían en el teléfono reciben 2 (media) al agregar la columna. Room
+     * exige un default en SQL para columnas NOT NULL nuevas, y el `= 2` de
+     * Kotlin solo sirve para el código, no para la migración.
+     */
+    @ColumnInfo(defaultValue = "2") val priority: Int = 2
 )
 
 /**

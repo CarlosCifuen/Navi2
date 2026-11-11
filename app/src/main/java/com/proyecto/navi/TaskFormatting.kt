@@ -5,50 +5,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.proyecto.navi.data.Task
-import com.proyecto.navi.data.TaskTag
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 /**
- * Colores de cada etiqueta, resueltos en la UI y no guardados en la base.
+ * Color de acento de una categoría (Universidad, Casa...), resuelto en la UI y
+ * no guardado en la base. Lo usan el título de la sección, el checkbox de cada
+ * tarea y, en Calendario, la barra y la hora de la actividad: así una tarea de
+ * Universidad se ve del mismo azul en las dos pantallas.
  *
- * Esto arregla el problema que tenían los chips en modo oscuro: los pasteles
- * fijos (0xFFFBE3D0 y compañía) se veían como parches claros sobre superficies
- * oscuras. Ahora cada tag tiene su par para cada tema.
- *
- * @return (color de fondo, color de texto)
+ * La categoría sigue siendo texto en la base. Las dos conocidas tienen color
+ * fijo; cualquier otra que escriba el usuario recibe uno de la paleta según su
+ * nombre, y siempre el mismo (por eso se usa el hash del nombre y no un
+ * contador: un contador cambiaría de color al reordenar las secciones).
+ * Cada color tiene su par para claro y oscuro, como los chips de antes.
  */
 @Composable
-fun TaskTag.colors(): Pair<Color, Color> {
+fun categoryColor(category: String): Color {
     val dark = isSystemInDarkTheme()
-    return when (this) {
-        TaskTag.ALTA, TaskTag.CASA ->
-            if (dark) Color(0xFF4A3524) to Color(0xFFF2BE8E)
-            else Color(0xFFFBE3D0) to Color(0xFFB25E1E)
-
-        TaskTag.CLASE ->
-            if (dark) Color(0xFF26354F) to Color(0xFF9EBDF2)
-            else Color(0xFFDCE7FB) to Color(0xFF2E5FAE)
-
-        TaskTag.IDEA, TaskTag.HABITO ->
-            if (dark) Color(0xFF23402F) to Color(0xFF8BD4AC)
-            else Color(0xFFDDF3E8) to Color(0xFF2F8A5B)
+    val key = category.trim().lowercase()
+    return when (key) {
+        "universidad" -> if (dark) Color(0xFF9EBDF2) else Color(0xFF2E5FAE)
+        "casa" -> if (dark) Color(0xFF8BD4AC) else Color(0xFF2F8A5B)
+        else -> {
+            val palette = if (dark) {
+                listOf(Color(0xFFF2BE8E), Color(0xFFC9A9F2), Color(0xFFF0A8C0), Color(0xFF86D3D8))
+            } else {
+                listOf(Color(0xFFB25E1E), Color(0xFF7A4CB8), Color(0xFFB8426E), Color(0xFF1F8A92))
+            }
+            palette[Math.floorMod(key.hashCode(), palette.size)]
+        }
     }
 }
-
-/** Texto corto de la etiqueta, para el chip. */
-@Composable
-fun TaskTag.label(): String = stringResource(
-    when (this) {
-        TaskTag.ALTA -> R.string.tag_alta
-        TaskTag.CLASE -> R.string.tag_clase
-        TaskTag.IDEA -> R.string.tag_idea
-        TaskTag.HABITO -> R.string.tag_habito
-        TaskTag.CASA -> R.string.tag_casa
-    }
-)
 
 /**
  * ¿El timestamp cae en el día de hoy?

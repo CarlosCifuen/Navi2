@@ -295,15 +295,17 @@ private fun SelectedDayHeader(day: DayKey, count: Int) {
 }
 
 /**
- * Una actividad del día. La barra y la hora toman el color de la etiqueta
- * (el mismo que el chip en Tareas), así una Clase se ve azul en ambas pantallas.
+ * Una actividad del día. La barra y la hora toman el color de su categoría
+ * (el mismo del título de sección y el checkbox en Tareas).
  */
 @Composable
 private fun ActivityCard(task: Task) {
-    val (tagBg, tagText) = task.tag.colors()
+    val accent = categoryColor(task.category)
     val time = SimpleDateFormat("HH:mm", Locale.forLanguageTag("es")).format(Date(task.dueAt))
-    val kind =
-        if (task.isDaily) stringResource(R.string.habito_diario) else task.tag.label()
+    // Hábito diario se aclara; una tarea normal solo muestra su categoría.
+    val subtitle =
+        if (task.isDaily) "${task.category} · ${stringResource(R.string.habito_diario)}"
+        else task.category
 
     Row(
         modifier = Modifier
@@ -316,7 +318,7 @@ private fun ActivityCard(task: Task) {
             modifier = Modifier
                 .width(6.dp)
                 .fillMaxHeight()
-                .background(tagBg)
+                .background(accent)
         )
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -327,7 +329,7 @@ private fun ActivityCard(task: Task) {
                 modifier = Modifier.width(56.dp),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = tagText
+                color = accent
             )
             Column {
                 Text(
@@ -336,7 +338,7 @@ private fun ActivityCard(task: Task) {
                     textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
                 )
                 Text(
-                    "${task.category} · $kind",
+                    subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

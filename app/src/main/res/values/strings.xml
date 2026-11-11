@@ -24,13 +24,6 @@
     <!-- Con placeholders numerados: en otros idiomas el orden cambia. -->
     <string name="tareas_completadas">%1$d de %2$d tareas completadas</string>
 
-    <!-- Etiquetas de tarea (enum TaskTag) -->
-    <string name="tag_alta">Alta</string>
-    <string name="tag_clase">Clase</string>
-    <string name="tag_idea">Idea</string>
-    <string name="tag_habito">Hábito</string>
-    <string name="tag_casa">Casa</string>
-
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>
     <string name="h_bitos">Hábitos</string>
