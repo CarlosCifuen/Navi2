@@ -24,6 +24,24 @@
     <!-- Con placeholders numerados: en otros idiomas el orden cambia. -->
     <string name="tareas_completadas">%1$d de %2$d tareas completadas</string>
 
+    <!-- Nueva tarea -->
+    <string name="campo_titulo">Título *</string>
+    <string name="campo_categoria">Categoría *</string>
+    <string name="campo_fecha">Fecha *</string>
+    <string name="campo_hora">Hora</string>
+    <string name="campo_prioridad">Prioridad</string>
+    <string name="prioridad_opcional">Opcional: toca de nuevo para quitarla</string>
+    <string name="prioridad_baja">Baja</string>
+    <string name="prioridad_media">Media</string>
+    <string name="prioridad_alta">Alta</string>
+    <string name="titulo_ejemplo">Ej. Entregar wireframes</string>
+    <string name="categoria_ejemplo">Universidad, casa o hábito</string>
+    <string name="campos_obligatorios">Los campos con * son obligatorios.</string>
+    <string name="campo_obligatorio">Este campo es obligatorio</string>
+    <string name="guardar">Guardar</string>
+    <string name="aceptar">Aceptar</string>
+
+
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>
     <string name="h_bitos">Hábitos</string>

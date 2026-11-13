@@ -57,7 +57,8 @@ fun TasksScreen(
     TasksScreen(
         uiState = uiState,
         onSelectFilter = viewModel::setFilter,
-        onToggleCompleted = viewModel::toggleCompleted
+        onToggleCompleted = viewModel::toggleCompleted,
+        onAddTask = viewModel::addTask
     )
 }
 
@@ -73,7 +74,8 @@ fun TasksScreen(
 fun TasksScreen(
     uiState: TasksUiState,
     onSelectFilter: (TaskFilter) -> Unit,
-    onToggleCompleted: (Task) -> Unit
+    onToggleCompleted: (Task) -> Unit,
+    onAddTask: (NewTaskInput) -> Unit
 ) {
     var showNewTaskSheet by remember { mutableStateOf(false) }
 
@@ -141,7 +143,14 @@ fun TasksScreen(
             sheetState = sheetState
         ) {
             Box(modifier = Modifier.fillMaxHeight(0.67f)) {
-                NewTaskScreen(onClose = { showNewTaskSheet = false })
+                NewTaskScreen(
+                    categories = uiState.categories,
+                    onSave = { input ->
+                        onAddTask(input)
+                        showNewTaskSheet = false
+                    },
+                    onClose = { showNewTaskSheet = false }
+                )
             }
         }
     }
@@ -313,7 +322,8 @@ private fun previewUiState(): TasksUiState {
         grouped = tasks.groupBy { it.category },
         filter = TaskFilter.TODAS,
         completedCount = tasks.count { it.isCompleted },
-        totalCount = tasks.size
+        totalCount = tasks.size,
+        categories = listOf("Casa", "Universidad")
     )
 }
 
@@ -321,7 +331,7 @@ private fun previewUiState(): TasksUiState {
 @Composable
 private fun TasksScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
     }
 }
 
@@ -333,6 +343,6 @@ private fun TasksScreenLightPreview() {
 @Composable
 private fun TasksScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
     }
 }
