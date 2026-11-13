@@ -52,7 +52,7 @@
     <string name="resumen_diario">Resumen diario</string>
     <string name="cada_d_a_a_las_7_00_p_m">Cada día a las 7:00 p. m.</string>
     <string name="inicio_de_semana">Inicio de semana</string>
-    <string name="lunes">Lunes</string>
+    <string name="domingo">Domingo</string>
     <string name="idioma">Idioma</string>
     <string name="espanol">Español</string>
     <string name="foto_de_perfil_de">Foto de perfil de %1$s</string>

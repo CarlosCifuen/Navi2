@@ -92,11 +92,6 @@ fun NewTaskScreen(
             .imePadding()
             .padding(horizontal = 24.dp)
     ) {
-        Text(
-            stringResource(R.string.nueva_tarea),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
 
         // Solo esta parte se desplaza; los botones de abajo quedan fijos para
         // que Guardar nunca se esconda detrás del teclado.
