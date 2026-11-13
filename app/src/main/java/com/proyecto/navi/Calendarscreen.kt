@@ -105,8 +105,6 @@ fun CalendarScreen(
                 MonthGrid(cells = uiState.cells, onSelectDay = onSelectDay)
             }
 
-            item(key = "legend") { Legend() }
-
             item(key = "day_title") {
                 SelectedDayHeader(
                     day = uiState.selected,
@@ -245,17 +243,6 @@ private fun DayCellView(cell: DayCell, onClick: () -> Unit, modifier: Modifier =
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun Legend() {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        LegendItem(MaterialTheme.colorScheme.primaryContainer, stringResource(R.string.dia_con_tareas))
-        LegendItem(MaterialTheme.colorScheme.primary, stringResource(R.string.dia_seleccionado))
     }
 }
 

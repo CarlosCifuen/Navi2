@@ -221,7 +221,7 @@ fun SettingsScreen(
                 //composable
                 SettingsItem(
                     title = stringResource(R.string.inicio_de_semana),
-                    value = stringResource(R.string.lunes),
+                    value = stringResource(R.string.domingo),
                     onClick = { }
                 )
                 HorizontalDivider()

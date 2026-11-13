@@ -9,12 +9,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.proyecto.navi.data.NaviDatabase
 import com.proyecto.navi.data.Task
 import com.proyecto.navi.data.TaskRepository
+import com.proyecto.navi.data.TaskTag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 enum class TaskFilter(@StringRes val labelRes: Int) {
     TODAS(R.string.todas),
@@ -30,7 +32,23 @@ data class TasksUiState(
     val grouped: Map<String, List<Task>> = emptyMap(),
     val filter: TaskFilter = TaskFilter.TODAS,
     val completedCount: Int = 0,
-    val totalCount: Int = 0
+    val totalCount: Int = 0,
+    /** Categorías que ya existen, para sugerirlas en el formulario de Nueva tarea. */
+    val categories: List<String> = emptyList()
+)
+
+/**
+ * Lo que el formulario entrega al guardar. Es un objeto aparte y no un Task
+ * porque el formulario no conoce (ni debe conocer) el id ni las columnas
+ * internas: eso lo completa el ViewModel.
+ *
+ * priority: 0 = sin prioridad, 1 = baja, 2 = media, 3 = alta.
+ */
+data class NewTaskInput(
+    val title: String,
+    val category: String,
+    val dueAt: Long,
+    val priority: Int
 )
 
 class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
@@ -58,7 +76,10 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
                 grouped = visible.groupBy { it.category },
                 filter = selected,
                 completedCount = tasks.count { it.isCompleted },
-                totalCount = tasks.size
+                totalCount = tasks.size,
+                // De todas las tareas, no de las visibles: con el filtro "Hoy"
+                // activo igual se deben poder elegir todas las categorías.
+                categories = tasks.map { it.category }.distinct().sorted()
             )
         }.stateIn(
             scope = viewModelScope,
@@ -68,6 +89,31 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
 
     fun setFilter(value: TaskFilter) {
         filter.value = value
+    }
+
+    /**
+     * Crea una tarea. Igual que toggleCompleted: solo se escribe en Room y las
+     * pantallas de Tareas y Calendario se actualizan solas por el Flow.
+     *
+     * `tag` y `avatarUrl` son columnas que ya no se muestran en ninguna parte;
+     * se llenan con valores neutros hasta que se eliminen en una migración.
+     */
+    fun addTask(input: NewTaskInput) {
+        viewModelScope.launch {
+            repository.save(
+                Task(
+                    id = UUID.randomUUID().toString(),
+                    title = input.title,
+                    category = input.category,
+                    tag = TaskTag.IDEA,
+                    dueAt = input.dueAt,
+                    isDaily = false,
+                    isCompleted = false,
+                    avatarUrl = "",
+                    priority = input.priority
+                )
+            )
+        }
     }
 
     /**
