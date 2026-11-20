@@ -29,11 +29,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,7 +71,9 @@ fun CalendarScreen(
         onPreviousMonth = { viewModel.changeMonth(-1) },
         onNextMonth = { viewModel.changeMonth(1) },
         onSelectDay = viewModel::selectDay,
-        onToggleCompleted = viewModel::toggleCompleted
+        onToggleCompleted = viewModel::toggleCompleted,
+        onUpdateTask = viewModel::updateTask,
+        onDeleteTask = viewModel::deleteTask
     )
 }
 
@@ -80,8 +84,13 @@ fun CalendarScreen(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDay: (DayKey) -> Unit,
-    onToggleCompleted: (Task) -> Unit
+    onToggleCompleted: (Task) -> Unit,
+    onUpdateTask: (Task, NewTaskInput) -> Unit,
+    onDeleteTask: (Task) -> Unit
 ) {
+    // Tocar una actividad abre el mismo editor que en Tareas (TaskEditorSheet).
+    var editingTask by remember { mutableStateOf<Task?>(null) }
+
     // Sin topBar, igual que Tareas: Scaffold ya reserva el inset de la barra
     // de estado, así que el contenido no queda debajo de ella.
     Scaffold { innerPadding ->
@@ -106,12 +115,11 @@ fun CalendarScreen(
                 MonthGrid(cells = uiState.cells, onSelectDay = onSelectDay)
             }
 
-            item(key = "day_title") {
-                SelectedDayHeader(
-                    day = uiState.selected,
-                    count = uiState.selectedTasks.size,
-                    showTitle = showDayTitle
-                )
+            // Opcional: Ajustes > Calendario > Mostrar día y fecha.
+            if (showDayTitle) {
+                item(key = "day_title") {
+                    SelectedDayHeader(day = uiState.selected)
+                }
             }
 
             if (uiState.selectedTasks.isEmpty()) {
@@ -129,10 +137,21 @@ fun CalendarScreen(
             items(uiState.selectedTasks, key = { it.id }) { task ->
                 TaskCard(
                     task = task,
-                    onToggleCompleted = { onToggleCompleted(task) }
+                    onToggleCompleted = { onToggleCompleted(task) },
+                    onClick = { editingTask = task }
                 )
             }
         }
+    }
+
+    editingTask?.let { task ->
+        TaskEditorSheet(
+            task = task,
+            categories = uiState.categories,
+            onSave = { input -> onUpdateTask(task, input) },
+            onDelete = { onDeleteTask(task) },
+            onDismiss = { editingTask = null }
+        )
     }
 }
 
@@ -254,18 +273,12 @@ private fun DayCellView(cell: DayCell, onClick: () -> Unit, modifier: Modifier =
 }
 
 @Composable
-private fun SelectedDayHeader(day: DayKey, count: Int, showTitle: Boolean) {
-    Column {
-        // Opcional (Ajustes > Calendario > Mostrar día y fecha). Si se oculta,
-        // queda solo el conteo de actividades.
-        if (showTitle) {
-            Text(
-                day.format("EEEE, d 'de' MMMM"),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
+private fun SelectedDayHeader(day: DayKey) {
+    Text(
+        day.format("EEEE, d 'de' MMMM"),
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 /** "julio 2026", "jueves, 24 de julio"... capitalizado, en español. Se usa también en Ajustes. */
@@ -294,7 +307,7 @@ private fun previewState(): CalendarUiState {
 @Composable
 private fun CalendarScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {})
+        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
     }
 }
 
@@ -306,6 +319,6 @@ private fun CalendarScreenLightPreview() {
 @Composable
 private fun CalendarScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {})
+        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
     }
 }

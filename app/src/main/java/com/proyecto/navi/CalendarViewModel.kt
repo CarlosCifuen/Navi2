@@ -42,7 +42,9 @@ data class CalendarUiState(
     val visibleMonth: DayKey,
     val cells: List<DayCell>,
     val selected: DayKey,
-    val selectedTasks: List<Task>
+    val selectedTasks: List<Task>,
+    /** Categorías existentes, para el formulario de edición. */
+    val categories: List<String> = emptyList()
 )
 
 // ---------- Helpers de fechas ----------
@@ -118,7 +120,13 @@ fun buildCalendarState(
         .filter { it.isDaily || it.dueAt.toDayKey() == selected }
         .sortedBy { minutesOfDay(it.dueAt) }
 
-    return CalendarUiState(visibleMonth, cells, selected, selectedTasks)
+    return CalendarUiState(
+        visibleMonth,
+        cells,
+        selected,
+        selectedTasks,
+        categories = tasks.map { it.category }.distinct().sorted()
+    )
 }
 
 // ---------- ViewModel ----------
@@ -145,6 +153,18 @@ class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = buildCalendarState(emptyList(), selected.value, visibleMonth.value)
         )
+
+    fun updateTask(task: Task, input: NewTaskInput) {
+        viewModelScope.launch {
+            repository.save(task.withInput(input))
+        }
+    }
+
+    fun deleteTask(task: Task) {
+        viewModelScope.launch {
+            repository.delete(task.id)
+        }
+    }
 
     /** Marca/desmarca una tarea desde el calendario (misma escritura que en Tareas). */
     fun toggleCompleted(task: Task) {

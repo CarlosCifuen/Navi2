@@ -51,7 +51,9 @@ fun TasksScreen(
         uiState = uiState,
         onSelectFilter = viewModel::setFilter,
         onToggleCompleted = viewModel::toggleCompleted,
-        onAddTask = viewModel::addTask
+        onAddTask = viewModel::addTask,
+        onUpdateTask = viewModel::updateTask,
+        onDeleteTask = viewModel::deleteTask
     )
 }
 
@@ -68,16 +70,24 @@ fun TasksScreen(
     uiState: TasksUiState,
     onSelectFilter: (TaskFilter) -> Unit,
     onToggleCompleted: (Task) -> Unit,
-    onAddTask: (NewTaskInput) -> Unit
+    onAddTask: (NewTaskInput) -> Unit,
+    onUpdateTask: (Task, NewTaskInput) -> Unit,
+    onDeleteTask: (Task) -> Unit
 ) {
-    var showNewTaskSheet by remember { mutableStateOf(false) }
+    // El mismo sheet sirve para crear y editar: showSheet dice si está abierto
+    // y editingTask cuál se edita (null = tarea nueva).
+    var showSheet by remember { mutableStateOf(false) }
+    var editingTask by remember { mutableStateOf<Task?>(null) }
 
     Scaffold(
         // Sin topBar: Tareas ya no tiene barra superior, para mostrar más contenido.
         // Sin bottomBar: la barra la provee NaviApp para las 3 pantallas top-level.
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showNewTaskSheet = true },
+                onClick = {
+                    editingTask = null
+                    showSheet = true
+                },
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.nueva_tarea))
@@ -118,7 +128,11 @@ fun TasksScreen(
                 items(tasks, key = { it.id }) { task ->
                     TaskCard(
                         task = task,
-                        onToggleCompleted = { onToggleCompleted(task) }
+                        onToggleCompleted = { onToggleCompleted(task) },
+                        onClick = {
+                            editingTask = task
+                            showSheet = true
+                        }
                     )
                 }
             }
@@ -127,25 +141,21 @@ fun TasksScreen(
         }
     }
 
-    // El tray de "Nueva tarea": ModalBottomSheet ya trae el scrim y la animación
-    // de subir desde abajo, así que no hay que escribir ninguna animación a mano.
-    if (showNewTaskSheet) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { showNewTaskSheet = false },
-            sheetState = sheetState
-        ) {
-            Box(modifier = Modifier.fillMaxHeight(0.67f)) {
-                NewTaskScreen(
-                    categories = uiState.categories,
-                    onSave = { input ->
-                        onAddTask(input)
-                        showNewTaskSheet = false
-                    },
-                    onClose = { showNewTaskSheet = false }
-                )
-            }
-        }
+    if (showSheet) {
+        val task = editingTask
+        TaskEditorSheet(
+            task = task,
+            categories = uiState.categories,
+            onSave = { input ->
+                if (task == null) onAddTask(input) else onUpdateTask(task, input)
+            },
+            onDelete = if (task != null) {
+                { onDeleteTask(task) }
+            } else {
+                null
+            },
+            onDismiss = { showSheet = false }
+        )
     }
 }
 
@@ -234,7 +244,7 @@ private fun previewUiState(): TasksUiState {
 @Composable
 private fun TasksScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
     }
 }
 
@@ -246,6 +256,6 @@ private fun TasksScreenLightPreview() {
 @Composable
 private fun TasksScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
     }
 }

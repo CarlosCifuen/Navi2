@@ -4,6 +4,9 @@
     <!-- Compartidos -->
     <string name="recordatorios">Recordatorios</string>
     <string name="cancelar">Cancelar</string>
+    <string name="eliminar">Eliminar</string>
+    <string name="eliminar_tarea_titulo">¿Eliminar tarea?</string>
+    <string name="eliminar_tarea_mensaje">Se eliminará “%1$s”. Esta acción no se puede deshacer.</string>
 
     <!-- Barra inferior (también son el contentDescription de cada ícono,
          así que son lo único que lee TalkBack con las etiquetas apagadas).
@@ -39,7 +42,6 @@
     <string name="campo_obligatorio">Este campo es obligatorio</string>
     <string name="guardar">Guardar</string>
     <string name="aceptar">Aceptar</string>
-
 
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>

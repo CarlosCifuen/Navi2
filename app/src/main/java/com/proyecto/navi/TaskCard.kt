@@ -33,19 +33,23 @@ import com.proyecto.navi.data.Task
 
 /**
  * Tarjeta de una tarea, compartida por Tareas y Calendario para que se vean
- * idénticas. El indicador de completada es clicable: ese toque escribe en
+ * idénticas. Tocar la tarjeta abre su edición (onClick). El indicador de
+ * completada es clicable aparte: ese toque escribe en
  * Room, y las dos pantallas se actualizan porque el DAO expone un Flow.
  *
  * El checkbox toma el color de la categoría (en vez de escribir su nombre);
  * la prioridad va al inicio de la línea de abajo ("!!! Hoy · 6:00 p. m.").
  */
 @Composable
-fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
+fun TaskCard(task: Task, onToggleCompleted: () -> Unit, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            // Tocar la tarjeta abre su edición; el checkbox tiene su propio
+            // clickable adentro, que se queda con el toque antes que la tarjeta.
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
