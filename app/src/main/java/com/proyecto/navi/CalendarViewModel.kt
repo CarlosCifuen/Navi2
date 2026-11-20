@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
@@ -42,9 +41,7 @@ data class CalendarUiState(
     val visibleMonth: DayKey,
     val cells: List<DayCell>,
     val selected: DayKey,
-    val selectedTasks: List<Task>,
-    /** Categorías existentes, para el formulario de edición. */
-    val categories: List<String> = emptyList()
+    val selectedTasks: List<Task>
 )
 
 // ---------- Helpers de fechas ----------
@@ -120,18 +117,12 @@ fun buildCalendarState(
         .filter { it.isDaily || it.dueAt.toDayKey() == selected }
         .sortedBy { minutesOfDay(it.dueAt) }
 
-    return CalendarUiState(
-        visibleMonth,
-        cells,
-        selected,
-        selectedTasks,
-        categories = tasks.map { it.category }.distinct().sorted()
-    )
+    return CalendarUiState(visibleMonth, cells, selected, selectedTasks)
 }
 
 // ---------- ViewModel ----------
 
-class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
+class CalendarViewModel(repository: TaskRepository) : ViewModel() {
 
     private val selected = MutableStateFlow(todayKey())
     private val visibleMonth = MutableStateFlow(todayKey().copy(day = 1))
@@ -153,25 +144,6 @@ class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = buildCalendarState(emptyList(), selected.value, visibleMonth.value)
         )
-
-    fun updateTask(task: Task, input: NewTaskInput) {
-        viewModelScope.launch {
-            repository.save(task.withInput(input))
-        }
-    }
-
-    fun deleteTask(task: Task) {
-        viewModelScope.launch {
-            repository.delete(task.id)
-        }
-    }
-
-    /** Marca/desmarca una tarea desde el calendario (misma escritura que en Tareas). */
-    fun toggleCompleted(task: Task) {
-        viewModelScope.launch {
-            repository.setCompleted(task.id, !task.isCompleted)
-        }
-    }
 
     /** Tocar un día gris (de otro mes) también lleva la vista a ese mes. */
     fun selectDay(day: DayKey) {

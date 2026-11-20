@@ -51,18 +51,6 @@ data class NewTaskInput(
     val priority: Int
 )
 
-/**
- * Aplica lo editado en el formulario sobre una tarea existente. copy() conserva
- * todo lo que el formulario no toca (id, si está completada, si es diaria...),
- * y como el id es el mismo, el upsert de Room reemplaza la fila en vez de crear otra.
- */
-fun Task.withInput(input: NewTaskInput): Task = copy(
-    title = input.title,
-    category = input.category,
-    dueAt = input.dueAt,
-    priority = input.priority
-)
-
 class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
 
     private val filter = MutableStateFlow(TaskFilter.TODAS)
@@ -125,19 +113,6 @@ class TasksViewModel(private val repository: TaskRepository) : ViewModel() {
                     priority = input.priority
                 )
             )
-        }
-    }
-
-    /** Guarda los cambios de una tarea existente (misma escritura que crear). */
-    fun updateTask(task: Task, input: NewTaskInput) {
-        viewModelScope.launch {
-            repository.save(task.withInput(input))
-        }
-    }
-
-    fun deleteTask(task: Task) {
-        viewModelScope.launch {
-            repository.delete(task.id)
         }
     }
 

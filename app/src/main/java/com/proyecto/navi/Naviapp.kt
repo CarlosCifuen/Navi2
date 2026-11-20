@@ -41,10 +41,6 @@ fun NaviApp() {
     // rememberSaveable alcanza para que sobreviva una rotación de pantalla.
     var showBottomBarLabels by rememberSaveable { mutableStateOf(true) }
 
-    // Mismo patrón: Ajustes lo cambia y Calendario lo lee. Controla si se
-    // muestra el título "Jueves, 24 de julio" sobre la lista del día.
-    var showCalendarDayTitle by rememberSaveable { mutableStateOf(true) }
-
     /**
      * Cambio de pestaña, patrón "salir a través de Tareas":
      * el stack se reconstruye como [Tareas] o [Tareas, pestaña], de modo que
@@ -79,13 +75,11 @@ fun NaviApp() {
             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
             entryProvider = entryProvider {
                 entry<Tareas> { TasksScreen() }
-                entry<Calendario> { CalendarScreen(showDayTitle = showCalendarDayTitle) }
+                entry<Calendario> { CalendarScreen() }
                 entry<Ajustes> {
                     SettingsScreen(
                         showBottomBarLabels = showBottomBarLabels,
-                        onToggleBottomBarLabels = { showBottomBarLabels = it },
-                        showCalendarDayTitle = showCalendarDayTitle,
-                        onToggleCalendarDayTitle = { showCalendarDayTitle = it }
+                        onToggleBottomBarLabels = { showBottomBarLabels = it }
                     )
                 }
             }
