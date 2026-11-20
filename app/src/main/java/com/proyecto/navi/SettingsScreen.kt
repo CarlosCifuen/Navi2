@@ -162,33 +162,33 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Grupo: Navegación / Hábitos / Apariencia
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                //composable
-                SettingsItem(
-                    icon = Icons.Default.Star,
-                    iconTint = MintIconColors.habitos,
-                    title = stringResource(R.string.h_bitos),
-                    description = stringResource(R.string.rachas_y_recordatorios),
-                    onClick = { }
-                )
-                HorizontalDivider()
-                //composable
-                SettingsItem(
-                    icon = Icons.Default.Palette,
-                    iconTint = MintIconColors.apariencia,
-                    title = stringResource(R.string.apariencia),
-                    description = stringResource(R.string.tema_claro_y_color_menta),
-                    onClick = { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+//            // Grupo: Hábitos / Apariencia
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clip(RoundedCornerShape(16.dp))
+//                    .background(MaterialTheme.colorScheme.surfaceVariant)
+//            ) {
+//                //composable
+//                SettingsItem(
+//                    icon = Icons.Default.Star,
+//                    iconTint = MintIconColors.habitos,
+//                    title = stringResource(R.string.h_bitos),
+//                    description = stringResource(R.string.rachas_y_recordatorios),
+//                    onClick = { }
+//                )
+//                HorizontalDivider()
+//                //composable
+//                SettingsItem(
+//                    icon = Icons.Default.Palette,
+//                    iconTint = MintIconColors.apariencia,
+//                    title = stringResource(R.string.apariencia),
+//                    description = stringResource(R.string.tema_claro_y_color_menta),
+//                    onClick = { }
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 stringResource(R.string.general),
@@ -251,28 +251,28 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                stringResource(R.string.recordatorios),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                //composable
-                NotificationToggleItem(
-                    title = stringResource(R.string.notificaciones_activadas),
-                    checked = true,
-                    onCheckedChange = { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+//            Text(
+//                stringResource(R.string.recordatorios),
+//                style = MaterialTheme.typography.labelMedium,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+//            )
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clip(RoundedCornerShape(16.dp))
+//                    .background(MaterialTheme.colorScheme.surfaceVariant)
+//            ) {
+//                //composable
+//                NotificationToggleItem(
+//                    title = stringResource(R.string.notificaciones_activadas),
+//                    checked = true,
+//                    onCheckedChange = { }
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(24.dp))
 
         }
     }

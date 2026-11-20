@@ -101,12 +101,12 @@ fun TasksScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item(key = "summary") {
-                WeeklySummaryCard(
-                    completed = uiState.completedCount,
-                    total = uiState.totalCount
-                )
-            }
+//            item(key = "summary") {
+//                WeeklySummaryCard(
+//                    completed = uiState.completedCount,
+//                    total = uiState.totalCount
+//                )
+//            }
 
             item(key = "filters") {
                 FilterRow(
@@ -159,40 +159,40 @@ fun TasksScreen(
     }
 }
 
-@Composable
-private fun WeeklySummaryCard(completed: Int, total: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("$completed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(
-                stringResource(R.string.esta_semana),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                stringResource(R.string.tareas_completadas, completed, total),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
+// @Composable
+// private fun WeeklySummaryCard(completed: Int, total: Int) {
+//     Row(
+//         modifier = Modifier
+//             .fillMaxWidth()
+//             .clip(RoundedCornerShape(16.dp))
+//             .background(MaterialTheme.colorScheme.primaryContainer)
+//             .padding(16.dp),
+//         verticalAlignment = Alignment.CenterVertically
+//     ) {
+//         Box(
+//             modifier = Modifier
+//                 .size(44.dp)
+//                 .clip(CircleShape)
+//                 .background(MaterialTheme.colorScheme.background),
+//             contentAlignment = Alignment.Center
+//         ) {
+//             Text("$completed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+//         }
+//         Spacer(modifier = Modifier.width(12.dp))
+//         Column {
+//             Text(
+//                 stringResource(R.string.esta_semana),
+//                 style = MaterialTheme.typography.titleMedium,
+//                 fontWeight = FontWeight.Bold
+//             )
+//             Text(
+//                 stringResource(R.string.tareas_completadas, completed, total),
+//                 style = MaterialTheme.typography.bodySmall,
+//                 color = MaterialTheme.colorScheme.onSurfaceVariant
+//             )
+//         }
+//     }
+// }
 
 @Composable
 private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
