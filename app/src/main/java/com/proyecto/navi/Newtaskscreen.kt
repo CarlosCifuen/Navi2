@@ -101,7 +101,6 @@ fun NewTaskScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
 
             OutlinedTextField(
                 value = title,
@@ -180,11 +179,6 @@ fun NewTaskScreen(
                 Text(
                     stringResource(R.string.campo_prioridad),
                     style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    stringResource(R.string.prioridad_opcional),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

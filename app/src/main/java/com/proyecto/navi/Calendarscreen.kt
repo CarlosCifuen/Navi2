@@ -6,17 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -41,7 +38,6 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,24 +58,29 @@ import java.util.Locale
  */
 @Composable
 fun CalendarScreen(
+    showDayTitle: Boolean = true,
     viewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     CalendarScreen(
         uiState = uiState,
+        showDayTitle = showDayTitle,
         onPreviousMonth = { viewModel.changeMonth(-1) },
         onNextMonth = { viewModel.changeMonth(1) },
-        onSelectDay = viewModel::selectDay
+        onSelectDay = viewModel::selectDay,
+        onToggleCompleted = viewModel::toggleCompleted
     )
 }
 
 @Composable
 fun CalendarScreen(
     uiState: CalendarUiState,
+    showDayTitle: Boolean,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onSelectDay: (DayKey) -> Unit
+    onSelectDay: (DayKey) -> Unit,
+    onToggleCompleted: (Task) -> Unit
 ) {
     // Sin topBar, igual que Tareas: Scaffold ya reserva el inset de la barra
     // de estado, así que el contenido no queda debajo de ella.
@@ -108,7 +109,8 @@ fun CalendarScreen(
             item(key = "day_title") {
                 SelectedDayHeader(
                     day = uiState.selected,
-                    count = uiState.selectedTasks.size
+                    count = uiState.selectedTasks.size,
+                    showTitle = showDayTitle
                 )
             }
 
@@ -122,8 +124,13 @@ fun CalendarScreen(
                 }
             }
 
+            // La misma tarjeta que en Tareas (TaskCard.kt), con su checkbox del
+            // color de la categoría y la prioridad al inicio de la línea de abajo.
             items(uiState.selectedTasks, key = { it.id }) { task ->
-                ActivityCard(task)
+                TaskCard(
+                    task = task,
+                    onToggleCompleted = { onToggleCompleted(task) }
+                )
             }
         }
     }
@@ -247,95 +254,22 @@ private fun DayCellView(cell: DayCell, onClick: () -> Unit, modifier: Modifier =
 }
 
 @Composable
-private fun LegendItem(color: Color, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun SelectedDayHeader(day: DayKey, count: Int) {
+private fun SelectedDayHeader(day: DayKey, count: Int, showTitle: Boolean) {
     Column {
-        Text(
-            day.format("EEEE, d 'de' MMMM"),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            // plurals y no "$count actividades": en 1 debe decir "actividad".
-            pluralStringResource(R.plurals.actividades, count, count),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-/**
- * Una actividad del día. La barra y la hora toman el color de su categoría
- * (el mismo del título de sección y el checkbox en Tareas).
- */
-@Composable
-private fun ActivityCard(task: Task) {
-    val accent = categoryColor(task.category)
-    val time = SimpleDateFormat("HH:mm", Locale.forLanguageTag("es")).format(Date(task.dueAt))
-    // Hábito diario se aclara; una tarea normal solo muestra su categoría.
-    val subtitle =
-        if (task.isDaily) "${task.category} · ${stringResource(R.string.habito_diario)}"
-        else task.category
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(6.dp)
-                .fillMaxHeight()
-                .background(accent)
-        )
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Opcional (Ajustes > Calendario > Mostrar día y fecha). Si se oculta,
+        // queda solo el conteo de actividades.
+        if (showTitle) {
             Text(
-                time,
-                modifier = Modifier.width(56.dp),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = accent
+                day.format("EEEE, d 'de' MMMM"),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
-            Column {
-                Text(
-                    task.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
-                )
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
 
-/** "julio 2026", "jueves, 24 de julio"... capitalizado, en español. */
-private fun DayKey.format(pattern: String): String {
+/** "julio 2026", "jueves, 24 de julio"... capitalizado, en español. Se usa también en Ajustes. */
+fun DayKey.format(pattern: String): String {
     val locale = Locale.forLanguageTag("es")
     return SimpleDateFormat(pattern, locale)
         .format(Date(toCalendar().timeInMillis))
@@ -360,7 +294,7 @@ private fun previewState(): CalendarUiState {
 @Composable
 private fun CalendarScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        CalendarScreen(previewState(), onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {})
+        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {})
     }
 }
 
@@ -372,6 +306,6 @@ private fun CalendarScreenLightPreview() {
 @Composable
 private fun CalendarScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        CalendarScreen(previewState(), onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {})
+        CalendarScreen(previewState(), showDayTitle = true, onPreviousMonth = {}, onNextMonth = {}, onSelectDay = {}, onToggleCompleted = {})
     }
 }

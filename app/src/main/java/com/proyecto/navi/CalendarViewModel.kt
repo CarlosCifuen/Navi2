@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
@@ -122,7 +123,7 @@ fun buildCalendarState(
 
 // ---------- ViewModel ----------
 
-class CalendarViewModel(repository: TaskRepository) : ViewModel() {
+class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
 
     private val selected = MutableStateFlow(todayKey())
     private val visibleMonth = MutableStateFlow(todayKey().copy(day = 1))
@@ -144,6 +145,13 @@ class CalendarViewModel(repository: TaskRepository) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = buildCalendarState(emptyList(), selected.value, visibleMonth.value)
         )
+
+    /** Marca/desmarca una tarea desde el calendario (misma escritura que en Tareas). */
+    fun toggleCompleted(task: Task) {
+        viewModelScope.launch {
+            repository.setCompleted(task.id, !task.isCompleted)
+        }
+    }
 
     /** Tocar un día gris (de otro mes) también lleva la vista a ese mes. */
     fun selectDay(day: DayKey) {
