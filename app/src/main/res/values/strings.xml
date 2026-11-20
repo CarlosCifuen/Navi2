@@ -43,6 +43,21 @@
     <string name="guardar">Guardar</string>
     <string name="aceptar">Aceptar</string>
 
+    <!-- Calendario -->
+    <string-array name="dias_semana_inicial">
+        <item>D</item>
+        <item>L</item>
+        <item>M</item>
+        <item>M</item>
+        <item>J</item>
+        <item>V</item>
+        <item>S</item>
+    </string-array>
+    <string name="sin_actividades">No hay actividades para este día</string>
+    <string name="mes_anterior">Mes anterior</string>
+    <string name="mes_siguiente">Mes siguiente</string>
+    <string name="habito_diario">Hábito diario</string>
+
     <!-- Ajustes -->
     <string name="ajustes">Ajustes</string>
     <string name="h_bitos">Hábitos</string>
@@ -67,18 +82,4 @@
     <string name="reintentar">Reintentar</string>
     <string name="mostrar_dia_y_fecha">Mostrar día y fecha</string>
 
-    <!-- Calendario -->
-    <string-array name="dias_semana_inicial">
-        <item>D</item>
-        <item>L</item>
-        <item>M</item>
-        <item>M</item>
-        <item>J</item>
-        <item>V</item>
-        <item>S</item>
-    </string-array>
-    <string name="sin_actividades">No hay actividades para este día</string>
-    <string name="mes_anterior">Mes anterior</string>
-    <string name="mes_siguiente">Mes siguiente</string>
-    <string name="habito_diario">Hábito diario</string>
 </resources>
