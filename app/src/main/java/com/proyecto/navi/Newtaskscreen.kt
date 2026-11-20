@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.proyecto.navi.data.Task
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -51,8 +52,9 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * Contenido del tray de "Nueva tarea": no es un destino de navegación, se
- * muestra dentro de un ModalBottomSheet desde TasksScreen.kt.
+ * Formulario de tarea, para crear (task = null) o editar (task = la tarea).
+ * No es un destino de navegación: se muestra dentro de un ModalBottomSheet
+ * desde TaskEditorSheet.kt.
  *
  * Este Composable no sabe de Room ni de ViewModels: al guardar solo entrega un
  * NewTaskInput por onSave. Quien lo usa decide qué hacer con él.
@@ -64,19 +66,34 @@ import java.util.TimeZone
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewTaskScreen(
+    task: Task? = null,
     categories: List<String>,
     onSave: (NewTaskInput) -> Unit,
+    onDelete: (() -> Unit)? = null,
     onClose: () -> Unit
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var category by rememberSaveable { mutableStateOf("") }
+    // task == null: formulario vacío (tarea nueva). task != null: el mismo
+    // formulario, pero arrancando con los valores de esa tarea. Los valores
+    // iniciales solo se leen la primera vez; después manda lo que se escriba.
+    val dueAt = task?.dueAt?.let { Calendar.getInstance().apply { timeInMillis = it } }
+
+    var title by rememberSaveable { mutableStateOf(task?.title ?: "") }
+    var category by rememberSaveable { mutableStateOf(task?.category ?: "") }
     // Se guarda el día como milisegundos de su medianoche local, y la hora
     // aparte: son tipos que rememberSaveable sabe guardar sin código extra.
-    var dayMillis by rememberSaveable { mutableStateOf(todayKey().toCalendar().timeInMillis) }
-    var hour by rememberSaveable { mutableStateOf(nextFullHour()) }
-    var minute by rememberSaveable { mutableStateOf(0) }
+    var dayMillis by rememberSaveable {
+        mutableStateOf(
+            task?.dueAt?.toDayKey()?.toCalendar()?.timeInMillis
+                ?: todayKey().toCalendar().timeInMillis
+        )
+    }
+    var hour by rememberSaveable {
+        mutableStateOf(dueAt?.get(Calendar.HOUR_OF_DAY) ?: nextFullHour())
+    }
+    var minute by rememberSaveable { mutableStateOf(dueAt?.get(Calendar.MINUTE) ?: 0) }
     // 0 = sin prioridad. Es opcional: tocar la chip elegida la quita.
-    var priority by rememberSaveable { mutableStateOf(0) }
+    var priority by rememberSaveable { mutableStateOf(task?.priority ?: 0) }
+    var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
 
     var submitted by rememberSaveable { mutableStateOf(false) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
@@ -92,7 +109,6 @@ fun NewTaskScreen(
             .imePadding()
             .padding(horizontal = 24.dp)
     ) {
-
         // Solo esta parte se desplaza; los botones de abajo quedan fijos para
         // que Guardar nunca se esconda detrás del teclado.
         Column(
@@ -176,17 +192,10 @@ fun NewTaskScreen(
                 onClick = { showTimePicker = true }
             )
 
-            Column {
-                Text(
-                    stringResource(R.string.campo_prioridad),
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    stringResource(R.string.prioridad_opcional),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                stringResource(R.string.campo_prioridad),
+                style = MaterialTheme.typography.titleSmall
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
                     1 to R.string.prioridad_baja,
@@ -218,6 +227,15 @@ fun NewTaskScreen(
             TextButton(onClick = onClose) {
                 Text(stringResource(R.string.cancelar))
             }
+            // Solo existe al editar. Pide confirmación antes de borrar.
+            if (onDelete != null) {
+                TextButton(onClick = { showDeleteConfirm = true }) {
+                    Text(
+                        stringResource(R.string.eliminar),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
             Button(
                 onClick = {
                     submitted = true
@@ -242,6 +260,32 @@ fun NewTaskScreen(
                 Text(stringResource(R.string.guardar))
             }
         }
+    }
+
+    if (showDeleteConfirm && onDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.eliminar_tarea_titulo)) },
+            text = {
+                Text(stringResource(R.string.eliminar_tarea_mensaje, task?.title.orEmpty()))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDelete()
+                }) {
+                    Text(
+                        stringResource(R.string.eliminar),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(R.string.cancelar))
+                }
+            }
+        )
     }
 
     if (showDatePicker) {
@@ -366,6 +410,30 @@ private fun NewTaskScreenPreview() {
         NewTaskScreen(
             categories = listOf("Casa", "Universidad"),
             onSave = {},
+            onClose = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Editar tarea")
+@Composable
+private fun EditTaskScreenPreview() {
+    NaviTheme(darkTheme = false) {
+        NewTaskScreen(
+            task = Task(
+                id = "p1",
+                title = "Entregar wireframes",
+                category = "Universidad",
+                tag = com.proyecto.navi.data.TaskTag.IDEA,
+                dueAt = System.currentTimeMillis(),
+                isDaily = false,
+                isCompleted = false,
+                avatarUrl = "",
+                priority = 3
+            ),
+            categories = listOf("Casa", "Universidad"),
+            onSave = {},
+            onDelete = {},
             onClose = {}
         )
     }
