@@ -1,6 +1,7 @@
 package com.proyecto.navi
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,17 +10,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,9 +58,7 @@ fun TasksScreen(
         uiState = uiState,
         onSelectFilter = viewModel::setFilter,
         onToggleCompleted = viewModel::toggleCompleted,
-        onAddTask = viewModel::addTask,
-        onUpdateTask = viewModel::updateTask,
-        onDeleteTask = viewModel::deleteTask
+        onAddTask = viewModel::addTask
     )
 }
 
@@ -70,24 +75,16 @@ fun TasksScreen(
     uiState: TasksUiState,
     onSelectFilter: (TaskFilter) -> Unit,
     onToggleCompleted: (Task) -> Unit,
-    onAddTask: (NewTaskInput) -> Unit,
-    onUpdateTask: (Task, NewTaskInput) -> Unit,
-    onDeleteTask: (Task) -> Unit
+    onAddTask: (NewTaskInput) -> Unit
 ) {
-    // El mismo sheet sirve para crear y editar: showSheet dice si está abierto
-    // y editingTask cuál se edita (null = tarea nueva).
-    var showSheet by remember { mutableStateOf(false) }
-    var editingTask by remember { mutableStateOf<Task?>(null) }
+    var showNewTaskSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         // Sin topBar: Tareas ya no tiene barra superior, para mostrar más contenido.
         // Sin bottomBar: la barra la provee NaviApp para las 3 pantallas top-level.
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    editingTask = null
-                    showSheet = true
-                },
+                onClick = { showNewTaskSheet = true },
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.nueva_tarea))
@@ -128,11 +125,7 @@ fun TasksScreen(
                 items(tasks, key = { it.id }) { task ->
                     TaskCard(
                         task = task,
-                        onToggleCompleted = { onToggleCompleted(task) },
-                        onClick = {
-                            editingTask = task
-                            showSheet = true
-                        }
+                        onToggleCompleted = { onToggleCompleted(task) }
                     )
                 }
             }
@@ -141,21 +134,25 @@ fun TasksScreen(
         }
     }
 
-    if (showSheet) {
-        val task = editingTask
-        TaskEditorSheet(
-            task = task,
-            categories = uiState.categories,
-            onSave = { input ->
-                if (task == null) onAddTask(input) else onUpdateTask(task, input)
-            },
-            onDelete = if (task != null) {
-                { onDeleteTask(task) }
-            } else {
-                null
-            },
-            onDismiss = { showSheet = false }
-        )
+    // El tray de "Nueva tarea": ModalBottomSheet ya trae el scrim y la animación
+    // de subir desde abajo, así que no hay que escribir ninguna animación a mano.
+    if (showNewTaskSheet) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showNewTaskSheet = false },
+            sheetState = sheetState
+        ) {
+            Box(modifier = Modifier.fillMaxHeight(0.67f)) {
+                NewTaskScreen(
+                    categories = uiState.categories,
+                    onSave = { input ->
+                        onAddTask(input)
+                        showNewTaskSheet = false
+                    },
+                    onClose = { showNewTaskSheet = false }
+                )
+            }
+        }
     }
 }
 
@@ -221,6 +218,96 @@ private fun FilterRow(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
 }
 
 /**
+ * Ítem de la lista. El indicador de completada es clicable: ese toque escribe
+ * en Room, y la lista se actualiza porque el DAO expone un Flow.
+ *
+ * El checkbox toma el color de la categoría; la prioridad va al inicio de la
+ * línea de abajo ("!!! Hoy · 6:00 p. m.").
+ */
+@Composable
+private fun TaskCard(task: Task, onToggleCompleted: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CompletionIndicator(
+            isCompleted = task.isCompleted,
+            accent = categoryColor(task.category),
+            onClick = onToggleCompleted
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                task.title,
+                style = MaterialTheme.typography.titleMedium,
+                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
+            )
+            TaskSubtitle(task)
+        }
+    }
+}
+
+/** "!!! Hoy · 6:00 p. m.": signos de prioridad en rojo y el horario normal. */
+@Composable
+private fun TaskSubtitle(task: Task) {
+    val priorityColor = MaterialTheme.colorScheme.error
+    val schedule = scheduleText(task)
+    val text = buildAnnotatedString {
+        val level = task.priority.coerceIn(0, 3)
+        if (level > 0) {
+            withStyle(SpanStyle(color = priorityColor, fontWeight = FontWeight.Bold)) {
+                append("!".repeat(level))
+            }
+            append(" ")
+        }
+        append(schedule)
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun CompletionIndicator(isCompleted: Boolean, accent: Color, onClick: () -> Unit) {
+    val description = stringResource(
+        if (isCompleted) R.string.completada else R.string.pendiente
+    )
+
+    if (isCompleted) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(1.5.dp, accent, RoundedCornerShape(6.dp))
+                .clickable(onClickLabel = description, onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = description,
+                tint = accent,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(accent.copy(alpha = 0.35f))
+                .clickable(onClickLabel = description, onClick = onClick)
+        )
+    }
+}
+
+/**
  * Datos de ejemplo SOLO para los previews. Los datos reales salen de Room
  * (ver data/SeedData.kt); esto nunca llega al dispositivo.
  */
@@ -244,7 +331,7 @@ private fun previewUiState(): TasksUiState {
 @Composable
 private fun TasksScreenLightPreview() {
     NaviTheme(darkTheme = false) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
     }
 }
 
@@ -256,6 +343,6 @@ private fun TasksScreenLightPreview() {
 @Composable
 private fun TasksScreenDarkPreview() {
     NaviTheme(darkTheme = true) {
-        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {}, onUpdateTask = { _, _ -> }, onDeleteTask = {})
+        TasksScreen(previewUiState(), onSelectFilter = {}, onToggleCompleted = {}, onAddTask = {})
     }
 }
