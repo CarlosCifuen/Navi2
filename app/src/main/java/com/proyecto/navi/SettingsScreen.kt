@@ -7,6 +7,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -73,6 +76,8 @@ fun NaviTheme(
 fun SettingsScreen(
     showBottomBarLabels: Boolean = true,
     onToggleBottomBarLabels: (Boolean) -> Unit = {},
+    showCalendarDayTitle: Boolean = true,
+    onToggleCalendarDayTitle: (Boolean) -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
 ) {
     val profile by profileViewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +92,8 @@ fun SettingsScreen(
     SettingsScreen(
         showBottomBarLabels = showBottomBarLabels,
         onToggleBottomBarLabels = onToggleBottomBarLabels,
+        showCalendarDayTitle = showCalendarDayTitle,
+        onToggleCalendarDayTitle = onToggleCalendarDayTitle,
         profile = profile,
         onPickPhoto = {
             pickImage.launch(
@@ -106,10 +113,16 @@ fun SettingsScreen(
 fun SettingsScreen(
     showBottomBarLabels: Boolean,
     onToggleBottomBarLabels: (Boolean) -> Unit,
+    showCalendarDayTitle: Boolean,
+    onToggleCalendarDayTitle: (Boolean) -> Unit,
     profile: ProfileUiState,
     onPickPhoto: () -> Unit,
     onDismissError: () -> Unit
 ) {
+    // Ejemplo de lo que mostraría el calendario ("Jueves, 19 de noviembre").
+    // Se calcula al entrar a Ajustes, así que siempre es el día de hoy.
+    val todayText = remember { todayKey().format("EEEE, d 'de' MMMM") }
+
     Scaffold(
         topBar = {
             // CenterAlignedTopAppBar en vez de TopAppBar: es el único cambio
@@ -130,6 +143,9 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
+                // Va al final, después de fillMaxSize: la Column ocupa la
+                // pantalla y su contenido puede ser más alto que ella.
+                .verticalScroll(rememberScrollState())
         ) {
             ProfileCard(
                 name = profile.name,
@@ -146,56 +162,33 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Grupo: Navegación / Hábitos / Apariencia
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                //composable
-                SettingsItem(
-                    icon = Icons.Default.Star,
-                    iconTint = MintIconColors.habitos,
-                    title = stringResource(R.string.h_bitos),
-                    description = stringResource(R.string.rachas_y_recordatorios),
-                    onClick = { }
-                )
-                HorizontalDivider()
-                //composable
-                SettingsItem(
-                    icon = Icons.Default.Palette,
-                    iconTint = MintIconColors.apariencia,
-                    title = stringResource(R.string.apariencia),
-                    description = stringResource(R.string.tema_claro_y_color_menta),
-                    onClick = { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                stringResource(R.string.recordatorios),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                //composable
-                NotificationToggleItem(
-                    title = stringResource(R.string.notificaciones_activadas),
-                    checked = true,
-                    onCheckedChange = { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+//            // Grupo: Hábitos / Apariencia
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clip(RoundedCornerShape(16.dp))
+//                    .background(MaterialTheme.colorScheme.surfaceVariant)
+//            ) {
+//                //composable
+//                SettingsItem(
+//                    icon = Icons.Default.Star,
+//                    iconTint = MintIconColors.habitos,
+//                    title = stringResource(R.string.h_bitos),
+//                    description = stringResource(R.string.rachas_y_recordatorios),
+//                    onClick = { }
+//                )
+//                HorizontalDivider()
+//                //composable
+//                SettingsItem(
+//                    icon = Icons.Default.Palette,
+//                    iconTint = MintIconColors.apariencia,
+//                    title = stringResource(R.string.apariencia),
+//                    description = stringResource(R.string.tema_claro_y_color_menta),
+//                    onClick = { }
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 stringResource(R.string.general),
@@ -233,6 +226,54 @@ fun SettingsScreen(
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                stringResource(R.string.calendario),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                //composable
+                NotificationToggleItem(
+                    title = stringResource(R.string.mostrar_dia_y_fecha),
+                    description = todayText,
+                    checked = showCalendarDayTitle,
+                    onCheckedChange = onToggleCalendarDayTitle
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+//            Text(
+//                stringResource(R.string.recordatorios),
+//                style = MaterialTheme.typography.labelMedium,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+//            )
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .clip(RoundedCornerShape(16.dp))
+//                    .background(MaterialTheme.colorScheme.surfaceVariant)
+//            ) {
+//                //composable
+//                NotificationToggleItem(
+//                    title = stringResource(R.string.notificaciones_activadas),
+//                    checked = true,
+//                    onCheckedChange = { }
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+
         }
     }
 }
@@ -438,6 +479,8 @@ fun SettingsScreenLightPreview() {
         SettingsScreen(
             showBottomBarLabels = true,
             onToggleBottomBarLabels = {},
+            showCalendarDayTitle = true,
+            onToggleCalendarDayTitle = {},
             profile = previewProfile(),
             onPickPhoto = {},
             onDismissError = {}
@@ -456,6 +499,8 @@ fun SettingsScreenDarkPreview() {
         SettingsScreen(
             showBottomBarLabels = false,
             onToggleBottomBarLabels = {},
+            showCalendarDayTitle = true,
+            onToggleCalendarDayTitle = {},
             profile = previewProfile(),
             onPickPhoto = {},
             onDismissError = {}
